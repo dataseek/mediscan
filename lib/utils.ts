@@ -1,7 +1,7 @@
 import { t, tList, type Locale } from "@/lib/i18n";
 import type { AnalysisResponse, UrgenciaEstado, ValorEstado } from "@/lib/types";
 
-const imageDataUrlPattern = /^data:(image\/(?:png|jpeg|jpg|webp|heic|heif));base64,([A-Za-z0-9+/=]+)$/i;
+const fileDataUrlPattern = /^data:((?:image\/(?:png|jpeg|jpg|webp|heic|heif))|application\/pdf);base64,([A-Za-z0-9+/=]+)$/i;
 
 const explanationMaxBlockChars = 380;
 
@@ -72,18 +72,18 @@ export function fileToDataUrl(file: File): Promise<string> {
         return;
       }
 
-      reject(new Error("No se pudo leer la imagen seleccionada."));
+      reject(new Error("No se pudo leer el archivo seleccionado."));
     };
-    reader.onerror = () => reject(new Error("No se pudo leer la imagen seleccionada."));
+    reader.onerror = () => reject(new Error("No se pudo leer el archivo seleccionado."));
     reader.readAsDataURL(file);
   });
 }
 
 export function splitImageDataUrl(dataUrl: string): { mimeType: string; imageBase64: string } {
-  const match = dataUrl.match(imageDataUrlPattern);
+  const match = dataUrl.match(fileDataUrlPattern);
 
   if (!match) {
-    throw new Error("The selected file does not appear to be a valid image.");
+    throw new Error("The selected file does not appear to be a valid image or PDF.");
   }
 
   const normalizedMimeType = match[1].toLowerCase() === "image/jpg" ? "image/jpeg" : match[1].toLowerCase();

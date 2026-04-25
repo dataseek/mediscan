@@ -39,7 +39,7 @@ export function Header() {
 
   return (
     <header className="mb-4 min-w-0 sm:mb-6">
-      <div className="relative flex min-h-[52px] items-center justify-between gap-0">
+      <div className="relative flex min-h-[52px] items-start justify-between gap-0">
         {!user ? (
           <Link
             href="/login"

@@ -5,9 +5,9 @@ import { normalizeAnalysisResponse } from "@/lib/utils";
 export const runtime = "edge";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "anthropic/claude-sonnet-4";
-const maxImageBase64Length = 18 * 1024 * 1024;
-const supportedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"]);
+const MODEL = "google/gemini-2.5-pro";
+const maxImageBase64Length = 22 * 1024 * 1024;
+const supportedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif", "application/pdf"]);
 
 const systemPrompt = `Sos un asistente medico educativo. Tu funcion es ayudar a personas comunes
 a entender estudios medicos y recetas medicas ANTES de ir al medico o farmaceutico.
@@ -47,9 +47,9 @@ Si la imagen es una receta medica:
 - En "valores", usa cada item para un medicamento, dosis o indicacion visible.
 - Para cada item:
   - "nombre": nombre del medicamento o indicacion; si no se lee, "Medicamento ilegible".
-  - "valor": dosis, frecuencia o instruccion visible; si no se lee, "No se lee con claridad".
+  - "valor": dosis, frecuencia, duracion en dias o instruccion visible; si no se lee, "No se lee con claridad".
   - "estado": "normal" si se lee bien, "atencion" si hay que confirmarlo, "revisar" si es ilegible o podria ser riesgoso malinterpretarlo.
-  - "explicacion": explica en lenguaje simple que se pudo leer y que debe confirmarse.
+  - "explicacion": explica en lenguaje simple que se pudo leer, aclarando en lo posible frecuencia (cada cuantas horas o veces al dia) y duracion (por cuantos dias), y que debe confirmarse.
 - En "preguntas_medico", genera preguntas directas para hacerle al medico, por ejemplo:
   "Doctor/a, este medicamento que leo como [nombre] es correcto?",
   "Me confirma la dosis y cada cuantas horas debo tomarlo?",
@@ -228,6 +228,7 @@ export async function POST(request: Request) {
   const locale = resolveLocale(typeof body.locale === "string" ? body.locale : null);
   const imageBase64 = typeof body.imageBase64 === "string" ? body.imageBase64.trim() : "";
   const mimeType = typeof body.mimeType === "string" ? body.mimeType.toLowerCase() : "";
+  const isPdf = mimeType === "application/pdf";
 
   if (!supportedMimeTypes.has(mimeType)) {
     return jsonError(locale, "api.unsupportedFormat", 400);
@@ -267,12 +268,20 @@ export async function POST(request: Request) {
                 type: "text",
                 text: `${t(locale, "api.userPrompt")} ${t(locale, "api.responseLanguageInstruction")}`
               },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${mimeType};base64,${imageBase64}`
-                }
-              }
+              isPdf
+                ? {
+                    type: "file",
+                    file: {
+                      filename: "mediscan-document.pdf",
+                      file_data: `data:${mimeType};base64,${imageBase64}`
+                    }
+                  }
+                : {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${mimeType};base64,${imageBase64}`
+                    }
+                  }
             ]
           }
         ]

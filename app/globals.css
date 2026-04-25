@@ -70,6 +70,33 @@ img {
   }
 }
 
+.mediscan-map-pin {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  border-radius: 9999px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
+}
+
+.mediscan-map-pin-user {
+  background: #3b82f6;
+}
+
+.mediscan-map-pin-pharmacy {
+  background: #16875f;
+}
+
+.leaflet-container {
+  font-family: inherit;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

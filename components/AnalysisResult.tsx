@@ -135,10 +135,15 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
   let cardIndex = 0;
   const nextDelay = () => 60 + cardIndex++ * 90;
   const speechText = useMemo(() => {
-    const values = result.valores
-      .slice(0, 6)
-      .map((value) => `${value.nombre}. ${value.valor}. ${value.explicacion}`)
-      .join(". ");
+    const values = isPrescription
+      ? result.valores
+          .slice(0, 5)
+          .map((value) => `${value.nombre}. ${value.valor}. ${value.explicacion}`)
+          .join(". ")
+      : result.valores
+          .slice(0, 6)
+          .map((value) => `${value.nombre}. ${value.valor}. ${value.explicacion}`)
+          .join(". ");
     const questions = result.preguntas_medico.slice(0, 5).join(". ");
 
     return [
@@ -151,7 +156,7 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
     ]
       .filter(Boolean)
       .join(". ");
-  }, [result, t]);
+  }, [isPrescription, result, t]);
 
   const handleSpeak = useCallback(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -208,34 +213,80 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
         {result.resumen}
       </ResultCard>
 
-      <ResultCard
-        icon={<ChartIcon />}
-        iconClassName="bg-[#0d3d32] text-[#3dd4a5]"
-        title={isPrescription ? t("result.prescriptionValuesTitle") : t("result.valuesTitle")}
-        animationDelayMs={nextDelay()}
-      >
-        {result.valores.length > 0 ? (
-          <ul className="divide-y divide-white/[0.06]">
-            {result.valores.slice(0, 6).map((value, index) => {
-              const state = valueState(value, t);
+      {!isPrescription ? (
+        <ResultCard
+          icon={<ChartIcon />}
+          iconClassName="bg-[#0d3d32] text-[#3dd4a5]"
+          title={t("result.valuesTitle")}
+          animationDelayMs={nextDelay()}
+        >
+          {result.valores.length > 0 ? (
+            <ul className="divide-y divide-white/[0.06]">
+              {result.valores.slice(0, 6).map((value, index) => {
+                const state = valueState(value, t);
 
-              return (
-                <li key={`${value.nombre}-${index}`} className="flex items-start gap-1.5 py-2.5 first:pt-0 last:pb-0 min-[380px]:items-center min-[380px]:gap-2">
-                  <span className="min-w-0 flex-1 break-words text-[12px] leading-snug text-[#d1d6df] min-[380px]:text-[13px] sm:text-[14px]">
-                    {value.nombre}
-                  </span>
-                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full min-[380px]:mt-0 ${state.dot}`} aria-hidden />
-                  <span className="w-[4.75rem] shrink-0 pt-0.5 text-right text-[11px] leading-snug text-[#b4bcc9] min-[380px]:w-[5.5rem] min-[380px]:pt-0 min-[380px]:text-[12px] sm:w-[92px] sm:text-[13px]">
-                    {state.label}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p>{isPrescription ? t("result.noPrescriptionValues") : t("result.noValues")}</p>
-        )}
-      </ResultCard>
+                return (
+                  <li key={`${value.nombre}-${index}`} className="flex items-start gap-1.5 py-2.5 first:pt-0 last:pb-0 min-[380px]:items-center min-[380px]:gap-2">
+                    <span className="min-w-0 flex-1 break-words text-[12px] leading-snug text-[#d1d6df] min-[380px]:text-[13px] sm:text-[14px]">
+                      {value.nombre}
+                    </span>
+                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full min-[380px]:mt-0 ${state.dot}`} aria-hidden />
+                    <span className="w-[4.75rem] shrink-0 pt-0.5 text-right text-[11px] leading-snug text-[#b4bcc9] min-[380px]:w-[5.5rem] min-[380px]:pt-0 min-[380px]:text-[12px] sm:w-[92px] sm:text-[13px]">
+                      {state.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p>{t("result.noValues")}</p>
+          )}
+        </ResultCard>
+      ) : null}
+
+      {isPrescription ? (
+        <ResultCard
+          icon={<ChartIcon />}
+          iconClassName="bg-[#0d3d32] text-[#3dd4a5]"
+          title={t("result.prescriptionValuesTitle")}
+          animationDelayMs={nextDelay()}
+          prose
+        >
+          {result.valores.length > 0 ? (
+            <div className="space-y-3">
+              <ul className="space-y-2.5">
+                {result.valores.slice(0, 6).map((value, index) => {
+                  const state = valueState(value, t);
+
+                  return (
+                    <li key={`${value.nombre}-${index}`} className="rounded-xl border border-white/[0.06] bg-[#0a121c]/85 p-3">
+                      <div className="flex min-w-0 items-start justify-between gap-2">
+                        <p className="min-w-0 break-words text-[14px] font-semibold leading-snug text-white">{value.nombre}</p>
+                        <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-1 text-[11px] font-semibold text-[#c4ccd8]">
+                          {state.label}
+                        </span>
+                      </div>
+                      {value.valor ? (
+                        <p className="mt-2 break-words text-[13px] font-semibold leading-snug text-[#3dd4a5]">
+                          {value.valor}
+                        </p>
+                      ) : null}
+                      <p className="mt-2 break-words text-[13px] leading-relaxed text-[#b4bcc9] sm:text-[14px]">
+                        {value.explicacion}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-[13px] font-semibold leading-relaxed text-amber-100 sm:text-[14px]">
+                {t("result.prescriptionVerifyDoctor")}
+              </p>
+            </div>
+          ) : (
+            <p className="text-[13px] leading-relaxed text-[#b4bcc9] sm:text-[14px]">{t("result.noPrescriptionValues")}</p>
+          )}
+        </ResultCard>
+      ) : null}
 
       <ResultCard
         icon={<QuestionIcon />}
@@ -289,8 +340,8 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
         <div className="flex h-10 items-center justify-end self-center pt-0.5 min-[380px]:h-12 sm:h-[52px]">
           <ChevronIcon />
         </div>
-        <div className="col-span-3 mt-2 min-w-0 min-[380px]:mt-2.5 sm:mt-3">
-          <p className="text-[12px] leading-relaxed text-[#9aa3b2] sm:text-[13px]">
+        <div className="col-span-3 mt-0.5 min-w-0 min-[380px]:mt-1 sm:mt-1.5">
+          <p className="text-[15px] font-medium leading-relaxed text-[#c4ccd8] sm:text-base">
             {result.disclaimer || t("result.disclaimerBody")}
           </p>
         </div>

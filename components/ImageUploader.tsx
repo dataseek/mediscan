@@ -15,7 +15,7 @@ interface ImageUploaderProps {
   disabled?: boolean;
 }
 
-const acceptedImageTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"];
+const acceptedFileTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif", "application/pdf"];
 type ImageQualityIssue = "tooDark" | "tooBright" | "lowContrast" | "tooSmall" | "notSharp" | "unreadable";
 type ImageQuality =
   | { status: "idle" }
@@ -175,6 +175,16 @@ function UploadIcon() {
   );
 }
 
+function PdfIcon() {
+  return (
+    <svg aria-hidden="true" className="h-8 w-8 text-red-100" viewBox="0 0 24 24" fill="none">
+      <path d="M7 3.5h6.2L18 8.3v12.2H7V3.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M13 3.8V8.5h4.7" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M8.9 14.5h6.2M8.9 17.2h4.1M8.9 11.8h4.9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function ScanIcon() {
   return (
     <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -290,12 +300,18 @@ export function ImageUploader({
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [imageQuality, setImageQuality] = useState<ImageQuality>({ status: "idle" });
   const fileLoadedAtParts = fileLoadedAtMs != null ? formatFileLoadedAtParts(fileLoadedAtMs, locale) : null;
+  const isPdf = previewUrl?.startsWith("data:application/pdf;") ?? false;
 
   useEffect(() => {
     let cancelled = false;
 
     if (!previewUrl) {
       setImageQuality({ status: "idle" });
+      return;
+    }
+
+    if (previewUrl.startsWith("data:application/pdf;")) {
+      setImageQuality({ status: "sharp" });
       return;
     }
 
@@ -335,12 +351,12 @@ export function ImageUploader({
       case "sharp":
       default:
         return {
-          label: t("uploader.sharpImage"),
+          label: isPdf ? t("uploader.pdfLoaded") : t("uploader.sharpImage"),
           className: "bg-medical/95 text-white",
           iconClassName: ""
         };
     }
-  }, [imageQuality, t]);
+  }, [imageQuality, isPdf, t]);
 
   const analyzableTag = useMemo(() => {
     switch (imageQuality.status) {
@@ -375,7 +391,7 @@ export function ImageUploader({
         return;
       }
 
-      if (!acceptedImageTypes.includes(file.type)) {
+      if (!acceptedFileTypes.includes(file.type)) {
         onError(t("uploader.invalidFormat"));
         return;
       }
@@ -418,12 +434,12 @@ export function ImageUploader({
         ref={galleryInputRef}
         className="sr-only"
         type="file"
-        accept="image/*"
+        accept="image/*,application/pdf,.pdf"
         onChange={handleInputChange}
         disabled={disabled}
       />
 
-      <HowItWorks />
+      {!previewUrl ? <HowItWorks /> : null}
 
       <div className="grid gap-3 sm:gap-3.5">
         <button
@@ -450,8 +466,16 @@ export function ImageUploader({
         <div className="space-y-2 sm:space-y-2.5">
           <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#8b95a8] sm:text-xs">{t("uploader.loadedStudy")}</p>
           <article className="relative flex min-w-0 gap-2.5 rounded-2xl border border-white/[0.06] bg-panel p-2.5 min-[380px]:gap-3 min-[380px]:p-3 sm:gap-3.5 sm:p-3.5">
-            <div className="relative h-[150px] w-[150px] shrink-0 overflow-hidden rounded-xl bg-black/40 min-[380px]:h-[150px] min-[380px]:w-[150px] sm:h-[150px] sm:w-[150px]">
-              <Image src={previewUrl} alt={t("uploader.previewAlt")} fill className="object-cover" unoptimized />
+            <div className="relative flex h-[150px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black/40 min-[380px]:h-[150px] min-[380px]:w-[150px] sm:h-[150px] sm:w-[150px]">
+              {isPdf ? (
+                <div className="flex h-full w-full flex-col items-center justify-center bg-red-500/10 px-3 text-center">
+                  <PdfIcon />
+                  <p className="mt-2 text-[13px] font-semibold text-white">{t("uploader.pdfPreviewTitle")}</p>
+                  <p className="mt-1 text-[11px] leading-snug text-[#c5cbd5]">{t("uploader.pdfPreviewSubtitle")}</p>
+                </div>
+              ) : (
+                <Image src={previewUrl} alt={t("uploader.previewAlt")} fill className="object-cover" unoptimized />
+              )}
             </div>
             <div className="min-w-0 flex-1 py-0.5 pr-10 min-[380px]:pr-11 sm:pr-12">
               <h2 className="line-clamp-2 break-words text-[14px] font-semibold leading-snug text-white min-[380px]:text-[15px] sm:text-base">

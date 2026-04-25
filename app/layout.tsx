@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { getMessages } from "@/lib/i18n";
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 const messages = getMessages("es");
