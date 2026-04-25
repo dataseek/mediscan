@@ -1,20 +1,36 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnalysisResult } from "@/components/AnalysisResult";
 import { Header } from "@/components/Header";
 import { ImageUploader } from "@/components/ImageUploader";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
+import { useLanguage } from "@/components/LanguageProvider";
 import type { AnalysisResponse, AnalyzeApiResponse } from "@/lib/types";
 import { splitImageDataUrl } from "@/lib/utils";
 
+function SpinnerIcon() {
+  return (
+    <svg aria-hidden="true" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
+      <path className="opacity-90" d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function HomePage() {
+  const { locale, t } = useLanguage();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileLoadedAtMs, setFileLoadedAtMs] = useState<number | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    setResult(null);
+    setError(null);
+  }, [locale]);
 
   const handleImageSelected = useCallback((dataUrl: string, selectedFileName: string, lastModified: number) => {
     setPreviewUrl(dataUrl);
@@ -34,7 +50,7 @@ export default function HomePage() {
 
   const handleAnalyze = useCallback(async () => {
     if (!previewUrl) {
-      setError("Primero seleccioná o fotografiá un estudio.");
+      setError(t("home.selectStudyFirst"));
       return;
     }
 
@@ -49,26 +65,22 @@ export default function HomePage() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ imageBase64, mimeType })
+        body: JSON.stringify({ imageBase64, mimeType, locale })
       });
 
       const data = (await response.json()) as AnalyzeApiResponse;
 
       if (!response.ok || "error" in data) {
-        throw new Error("error" in data ? data.error : "No se pudo analizar la imagen.");
+        throw new Error("error" in data ? data.error : t("home.analyzeFailed"));
       }
 
       setResult(data.result);
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "No pudimos analizar el estudio. Probá nuevamente con una imagen más clara."
-      );
+      setError(caughtError instanceof Error ? caughtError.message : t("home.analyzeFailed"));
     } finally {
       setIsAnalyzing(false);
     }
-  }, [previewUrl]);
+  }, [locale, previewUrl, t]);
 
   return (
     <main className="relative box-border mx-auto flex min-h-screen w-full max-w-none flex-col bg-ink pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.5rem,env(safe-area-inset-top,0px))] text-white antialiased sm:max-w-2xl sm:px-5 sm:pb-8 sm:pt-5 lg:max-w-4xl">
@@ -90,11 +102,24 @@ export default function HomePage() {
             {previewUrl && !result ? (
               <button
                 type="button"
-                className="flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-2xl bg-medical px-3 text-[14px] font-semibold leading-tight text-white shadow-sm shadow-black/20 transition hover:bg-medicalHover focus:outline-none focus:ring-2 focus:ring-emerald-400/40 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 min-[380px]:min-h-[52px] min-[380px]:px-4 min-[380px]:text-[15px] sm:min-h-[54px] sm:text-base"
+                className="relative flex min-h-[48px] w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl bg-medical px-3 text-[14px] font-semibold leading-tight text-white shadow-sm shadow-black/20 transition hover:bg-medicalHover focus:outline-none focus:ring-2 focus:ring-emerald-400/40 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-80 min-[380px]:min-h-[52px] min-[380px]:px-4 min-[380px]:text-[15px] sm:min-h-[54px] sm:text-base"
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
+                aria-busy={isAnalyzing}
               >
-                {isAnalyzing ? "Analizando estudio..." : "Analizar estudio"}
+                {isAnalyzing ? (
+                  <>
+                    <span className="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-white/10">
+                      <span className="block h-full w-1/2 animate-[loading-slide_1.15s_ease-in-out_infinite] rounded-full bg-white/55" />
+                    </span>
+                    <span className="relative z-10 inline-flex items-center gap-2">
+                      <SpinnerIcon />
+                      {t("home.analyzingStudy")}
+                    </span>
+                  </>
+                ) : (
+                  t("home.analyzeStudy")
+                )}
               </button>
             ) : null}
 
@@ -110,9 +135,7 @@ export default function HomePage() {
             {isAnalyzing ? <LoadingSkeleton /> : null}
           </div>
 
-          <div className="min-w-0">
-            {result ? <AnalysisResult result={result} /> : null}
-          </div>
+          <div className="min-w-0">{result ? <AnalysisResult result={result} /> : null}</div>
         </div>
       </div>
     </main>

@@ -33,6 +33,14 @@ const withPWA = require("next-pwa")({
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  async rewrites() {
+    return [
+      {
+        source: "/favicon.ico",
+        destination: "/icons/icon-192.png"
+      }
+    ];
+  },
   images: {
     dangerouslyAllowSVG: false
   }

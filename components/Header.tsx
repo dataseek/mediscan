@@ -1,10 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
+import { AccessibilityControls } from "@/components/AccessibilityControls";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MediScanLogoMark } from "@/components/MediScanLogoMark";
 import { PlanBadge } from "@/components/PlanBadge";
+import { useLanguage } from "@/components/LanguageProvider";
 
 function MenuIcon() {
   return (
@@ -24,6 +28,7 @@ function ChevronDownIcon() {
 
 export function Header() {
   const { data } = useSession();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
 
@@ -35,11 +40,10 @@ export function Header() {
   return (
     <header className="mb-4 min-w-0 sm:mb-6">
       <div className="relative flex min-h-[52px] items-center justify-between gap-0">
-        {/* Left: login (or user dropdown when logged in) */}
         {!user ? (
           <Link
             href="/login"
-            aria-label="Ingresar"
+            aria-label={t("header.login")}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.10] bg-panel/70 p-0 text-white/90 transition hover:bg-panel focus:outline-none focus:ring-2 focus:ring-medical/60"
           >
             <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -70,8 +74,7 @@ export function Header() {
               aria-expanded={isOpen}
             >
               <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white/[0.08]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {user.image ? <img src={user.image} alt="" className="h-full w-full object-cover" /> : null}
+                {user.image ? <Image src={user.image} alt="" width={28} height={28} className="h-full w-full object-cover" unoptimized /> : null}
               </span>
               <span className="min-w-0 max-w-[9rem] truncate text-[13px] font-semibold">{displayName}</span>
               <ChevronDownIcon />
@@ -88,7 +91,7 @@ export function Header() {
                   className="block px-4 py-3 text-[13px] text-white/90 hover:bg-white/[0.06]"
                   onClick={() => setIsOpen(false)}
                 >
-                  Mi historial
+                  {t("header.myHistory")}
                 </Link>
                 <Link
                   role="menuitem"
@@ -96,7 +99,7 @@ export function Header() {
                   className="block px-4 py-3 text-[13px] text-white/90 hover:bg-white/[0.06]"
                   onClick={() => setIsOpen(false)}
                 >
-                  Mi cuenta
+                  {t("header.myAccount")}
                 </Link>
                 <button
                   role="menuitem"
@@ -107,14 +110,13 @@ export function Header() {
                     await signOut({ callbackUrl: "/" });
                   }}
                 >
-                  Cerrar sesión
+                  {t("header.signOut")}
                 </button>
               </div>
             ) : null}
           </div>
         )}
 
-        {/* Center: logo */}
         <div className="min-w-0 flex-1 text-center">
           <Link href="/" className="inline-flex items-center justify-center gap-x-1 rounded-xl px-1 py-1 outline-none focus:ring-2 focus:ring-medical/60">
             <MediScanLogoMark className="h-8 w-8 shrink-0 translate-y-px text-medical min-[380px]:h-9 min-[380px]:w-9" />
@@ -123,13 +125,15 @@ export function Header() {
               <span className="text-medical">Scan</span>
             </span>
           </Link>
+          <p className="mx-auto mt-0.5 max-w-[15rem] text-balance px-1 text-[11px] font-medium leading-tight text-white/55 min-[380px]:max-w-[18rem] sm:text-xs">
+            {t("header.claim")}
+          </p>
         </div>
 
-        {/* Right: hamburger */}
         <div className="relative">
           <button
             type="button"
-            aria-label="Abrir menú"
+            aria-label={t("header.openMenu")}
             aria-haspopup="menu"
             aria-expanded={isHamburgerOpen}
             onClick={() => setIsHamburgerOpen((v) => !v)}
@@ -141,15 +145,21 @@ export function Header() {
           {isHamburgerOpen ? (
             <div
               role="menu"
-              className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#07111b] shadow-lg shadow-black/30"
+              className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#07111b] shadow-lg shadow-black/30"
             >
+              <div className="border-b border-white/[0.08] px-4 py-3">
+                <LanguageSwitcher />
+              </div>
+              <div className="border-b border-white/[0.08] px-4 py-3">
+                <AccessibilityControls />
+              </div>
               <Link
                 role="menuitem"
                 href="/historial"
                 className="block px-4 py-3 text-[13px] text-white/90 hover:bg-white/[0.06]"
                 onClick={() => setIsHamburgerOpen(false)}
               >
-                Mis análisis
+                {t("header.myAnalyses")}
               </Link>
               <Link
                 role="menuitem"
@@ -157,7 +167,7 @@ export function Header() {
                 className="block px-4 py-3 text-[13px] text-white/90 hover:bg-white/[0.06]"
                 onClick={() => setIsHamburgerOpen(false)}
               >
-                Configuración
+                {t("header.settings")}
               </Link>
             </div>
           ) : null}
@@ -166,4 +176,3 @@ export function Header() {
     </header>
   );
 }
-

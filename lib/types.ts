@@ -1,4 +1,4 @@
-export type ValorEstado = "normal" | "atención" | "revisar";
+export type ValorEstado = "normal" | "atencion" | "revisar";
 
 export type UrgenciaEstado = "normal" | "consultar-pronto" | "urgente";
 
@@ -11,6 +11,7 @@ export interface MedicalValue {
 
 export interface AnalysisResponse {
   tipo_estudio: string;
+  especialidad: string;
   resumen: string;
   valores: MedicalValue[];
   explicacion_general: string;

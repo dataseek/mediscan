@@ -1,3 +1,4 @@
+import { t, tList, type Locale } from "@/lib/i18n";
 import type { AnalysisResponse, UrgenciaEstado, ValorEstado } from "@/lib/types";
 
 const imageDataUrlPattern = /^data:(image\/(?:png|jpeg|jpg|webp|heic|heif));base64,([A-Za-z0-9+/=]+)$/i;
@@ -82,7 +83,7 @@ export function splitImageDataUrl(dataUrl: string): { mimeType: string; imageBas
   const match = dataUrl.match(imageDataUrlPattern);
 
   if (!match) {
-    throw new Error("El archivo seleccionado no parece ser una imagen válida.");
+    throw new Error("The selected file does not appear to be a valid image.");
   }
 
   const normalizedMimeType = match[1].toLowerCase() === "image/jpg" ? "image/jpeg" : match[1].toLowerCase();
@@ -94,14 +95,52 @@ export function splitImageDataUrl(dataUrl: string): { mimeType: string; imageBas
 }
 
 export function isValorEstado(value: string): value is ValorEstado {
-  return value === "normal" || value === "atención" || value === "revisar";
+  return value === "normal" || value === "atencion" || value === "revisar";
 }
 
 export function isUrgenciaEstado(value: string): value is UrgenciaEstado {
   return value === "normal" || value === "consultar-pronto" || value === "urgente";
 }
 
-export function normalizeAnalysisResponse(input: unknown): AnalysisResponse | null {
+function normalizeValorEstado(value: unknown): ValorEstado {
+  if (typeof value !== "string") {
+    return "revisar";
+  }
+
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (normalized === "normal") {
+    return "normal";
+  }
+
+  if (normalized === "atencion") {
+    return "atencion";
+  }
+
+  return "revisar";
+}
+
+function normalizeSpecialty(value: unknown, locale: Locale): string {
+  if (typeof value !== "string") {
+    return t(locale, "result.fallbacks.unknownValueName");
+  }
+
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+
+  if (normalized.includes("RECETA") || normalized.includes("PRESCRIP")) {
+    return "RECETA_MEDICA";
+  }
+
+  return value.trim() || t(locale, "result.fallbacks.unknownValueName");
+}
+
+export function normalizeAnalysisResponse(input: unknown, locale: Locale = "es"): AnalysisResponse | null {
   if (!input || typeof input !== "object") {
     return null;
   }
@@ -115,16 +154,18 @@ export function normalizeAnalysisResponse(input: unknown): AnalysisResponse | nu
           }
 
           const item = valor as Record<string, unknown>;
-          const estado = typeof item.estado === "string" && isValorEstado(item.estado) ? item.estado : "revisar";
+          const estado = normalizeValorEstado(item.estado);
 
           return {
-            nombre: typeof item.nombre === "string" ? item.nombre : "Valor sin identificar",
-            valor: typeof item.valor === "string" ? item.valor : "No informado",
+            nombre:
+              typeof item.nombre === "string" ? item.nombre : t(locale, "result.fallbacks.unknownValueName"),
+            valor:
+              typeof item.valor === "string" ? item.valor : t(locale, "result.fallbacks.valueNotReported"),
             estado,
             explicacion:
               typeof item.explicacion === "string"
                 ? item.explicacion
-                : "No se pudo interpretar este valor con claridad."
+                : t(locale, "result.fallbacks.unclearValueExplanation")
           };
         })
         .filter((valor): valor is NonNullable<typeof valor> => valor !== null)
@@ -138,35 +179,33 @@ export function normalizeAnalysisResponse(input: unknown): AnalysisResponse | nu
     typeof candidate.urgencia === "string" && isUrgenciaEstado(candidate.urgencia) ? candidate.urgencia : "normal";
 
   return {
-    tipo_estudio: typeof candidate.tipo_estudio === "string" ? candidate.tipo_estudio : "Estudio médico",
+    tipo_estudio:
+      typeof candidate.tipo_estudio === "string" ? candidate.tipo_estudio : t(locale, "result.fallbacks.studyTitle"),
+    especialidad: normalizeSpecialty(candidate.especialidad, locale),
     resumen:
-      typeof candidate.resumen === "string"
-        ? candidate.resumen
-        : "No se pudo obtener un resumen confiable del estudio.",
+      typeof candidate.resumen === "string" ? candidate.resumen : t(locale, "result.fallbacks.summary"),
     valores,
     explicacion_general:
       typeof candidate.explicacion_general === "string"
         ? candidate.explicacion_general
-        : "La imagen no permitió generar una explicación completa. Probá subir una foto más nítida.",
-    preguntas_medico:
-      preguntasMedico.length > 0
-        ? preguntasMedico
-        : ["¿Qué significa este resultado en mi caso particular?", "¿Necesito repetir o complementar este estudio?"],
+        : t(locale, "result.fallbacks.generalExplanation"),
+    preguntas_medico: preguntasMedico.length > 0 ? preguntasMedico : tList(locale, "result.fallbacks.questions"),
     urgencia,
     disclaimer:
       typeof candidate.disclaimer === "string"
         ? candidate.disclaimer
-        : "Este análisis es informativo y no reemplaza la consulta médica profesional."
+        : t(locale, "result.fallbacks.disclaimer")
   };
 }
 
-/** Fecha/hora de `File.lastModified` para la tarjeta “Estudio cargado” (es · separador). */
-export function formatFileLoadedAt(ms: number): string {
+export function formatFileLoadedAtParts(ms: number, locale: Locale): { date: string; time: string } | null {
   if (!Number.isFinite(ms)) {
-    return "";
+    return null;
   }
+
+  const dateLocale = locale === "pt" ? "pt-BR" : locale === "en" ? "en-US" : "es-AR";
   const d = new Date(ms);
-  const datePart = new Intl.DateTimeFormat("es", {
+  const datePart = new Intl.DateTimeFormat(dateLocale, {
     day: "numeric",
     month: "short",
     year: "numeric"
@@ -174,9 +213,19 @@ export function formatFileLoadedAt(ms: number): string {
     .format(d)
     .replace(/\./g, "")
     .trim();
-  const timePart = new Intl.DateTimeFormat("es", {
+  const timePart = new Intl.DateTimeFormat(dateLocale, {
     hour: "2-digit",
     minute: "2-digit"
   }).format(d);
-  return `${datePart} · ${timePart}`;
+
+  return {
+    date: datePart,
+    time: timePart
+  };
+}
+
+export function formatFileLoadedAt(ms: number, locale: Locale): string {
+  const parts = formatFileLoadedAtParts(ms, locale);
+
+  return parts ? `${parts.date} - ${parts.time}` : "";
 }

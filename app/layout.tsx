@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/Providers";
+import { getMessages } from "@/lib/i18n";
 import "./globals.css";
+
+const messages = getMessages("es");
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,9 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MediScan | Entendé tus estudios médicos",
-  description:
-    "PWA para fotografiar estudios médicos y recibir una explicación clara, orientativa y accesible antes de la consulta.",
+  title: messages.meta.title,
+  description: messages.meta.description,
   applicationName: "MediScan",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -21,6 +23,9 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false
+  },
+  other: {
+    "mobile-web-app-capable": "yes"
   },
   icons: {
     icon: [

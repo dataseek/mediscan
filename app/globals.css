@@ -6,6 +6,7 @@
   color-scheme: dark;
   background: #010b14;
   color: #f8fafc;
+  --mediscan-text-zoom: 1;
 }
 
 * {
@@ -33,6 +34,12 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+@supports (zoom: 1) {
+  body {
+    zoom: var(--mediscan-text-zoom);
+  }
+}
+
 button,
 input,
 textarea,
@@ -51,6 +58,16 @@ img {
 
 ::selection {
   background: rgba(16, 124, 86, 0.45);
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(220%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

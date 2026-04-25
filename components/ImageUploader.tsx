@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useRef } from "react";
-import { fileToDataUrl, formatFileLoadedAt } from "@/lib/utils";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
+import { fileToDataUrl, formatFileLoadedAtParts } from "@/lib/utils";
 
 interface ImageUploaderProps {
   previewUrl: string | null;
@@ -15,6 +16,134 @@ interface ImageUploaderProps {
 }
 
 const acceptedImageTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"];
+type ImageQualityIssue = "tooDark" | "tooBright" | "lowContrast" | "tooSmall" | "notSharp" | "unreadable";
+type ImageQuality =
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "sharp" }
+  | { status: "review" | "blurry"; issue: ImageQualityIssue };
+
+function getImageQuality(dataUrl: string): Promise<ImageQuality> {
+  return new Promise((resolve) => {
+    const image = new window.Image();
+
+    image.onload = () => {
+      const width = image.naturalWidth;
+      const height = image.naturalHeight;
+
+      if (width <= 0 || height <= 0) {
+        resolve({ status: "blurry", issue: "unreadable" });
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      const maxSide = 320;
+      const scale = Math.min(1, maxSide / Math.max(width, height));
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+
+      if (!context) {
+        resolve({ status: "review", issue: "unreadable" });
+        return;
+      }
+
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = canvas.width * canvas.height;
+      const gray = new Float32Array(pixels);
+      let sum = 0;
+
+      for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
+        const value = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        gray[p] = value;
+        sum += value;
+      }
+
+      const mean = sum / pixels;
+      let contrastSum = 0;
+
+      for (let i = 0; i < gray.length; i += 1) {
+        const diff = gray[i] - mean;
+        contrastSum += diff * diff;
+      }
+
+      const contrast = Math.sqrt(contrastSum / pixels);
+      let laplacianSum = 0;
+      let laplacianSqSum = 0;
+      let laplacianCount = 0;
+
+      for (let y = 1; y < canvas.height - 1; y += 1) {
+        for (let x = 1; x < canvas.width - 1; x += 1) {
+          const idx = y * canvas.width + x;
+          const laplacian =
+            gray[idx - canvas.width] +
+            gray[idx - 1] +
+            gray[idx + 1] +
+            gray[idx + canvas.width] -
+            gray[idx] * 4;
+
+          laplacianSum += laplacian;
+          laplacianSqSum += laplacian * laplacian;
+          laplacianCount += 1;
+        }
+      }
+
+      const laplacianMean = laplacianCount > 0 ? laplacianSum / laplacianCount : 0;
+      const sharpness = laplacianCount > 0 ? laplacianSqSum / laplacianCount - laplacianMean * laplacianMean : 0;
+      const tooSmall = Math.min(width, height) < 520;
+      const tooDark = mean < 35;
+      const tooBright = mean > 235;
+      const lowContrast = contrast < 18;
+
+      if (sharpness < 20) {
+        resolve({ status: "blurry", issue: "notSharp" });
+        return;
+      }
+
+      if (tooDark && lowContrast) {
+        resolve({ status: "blurry", issue: "tooDark" });
+        return;
+      }
+
+      if (tooBright && lowContrast) {
+        resolve({ status: "blurry", issue: "tooBright" });
+        return;
+      }
+
+      if (sharpness < 55) {
+        resolve({ status: "review", issue: "notSharp" });
+        return;
+      }
+
+      if (tooDark) {
+        resolve({ status: "review", issue: "tooDark" });
+        return;
+      }
+
+      if (tooBright) {
+        resolve({ status: "review", issue: "tooBright" });
+        return;
+      }
+
+      if (lowContrast) {
+        resolve({ status: "review", issue: "lowContrast" });
+        return;
+      }
+
+      if (tooSmall) {
+        resolve({ status: "review", issue: "tooSmall" });
+        return;
+      }
+
+      resolve({ status: "sharp" });
+    };
+
+    image.onerror = () => resolve({ status: "blurry", issue: "unreadable" });
+    image.src = dataUrl;
+  });
+}
 
 function CameraIcon() {
   return (
@@ -46,6 +175,32 @@ function UploadIcon() {
   );
 }
 
+function ScanIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+      <path d="M8 4H6.5A2.5 2.5 0 0 0 4 6.5V8M16 4h1.5A2.5 2.5 0 0 1 20 6.5V8M8 20H6.5A2.5 2.5 0 0 1 4 17.5V16M16 20h1.5a2.5 2.5 0 0 0 2.5-2.5V16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 12h8M9.5 9h5M9.5 15h3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SummaryIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+      <path d="M7 7h10M7 12h7M7 17h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function CalendarIcon() {
   return (
     <svg aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#8b95a8]" viewBox="0 0 24 24" fill="none">
@@ -57,6 +212,51 @@ function CalendarIcon() {
       />
       <path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
     </svg>
+  );
+}
+
+function HowItWorks() {
+  const { t } = useLanguage();
+  const steps = [
+    {
+      title: t("howItWorks.step1Title"),
+      body: t("howItWorks.step1Body"),
+      icon: <ScanIcon />,
+      className: "bg-medical/22 text-emerald-100 ring-medical/25"
+    },
+    {
+      title: t("howItWorks.step2Title"),
+      body: t("howItWorks.step2Body"),
+      icon: <ClockIcon />,
+      className: "bg-blue-500/18 text-blue-100 ring-blue-300/20"
+    },
+    {
+      title: t("howItWorks.step3Title"),
+      body: t("howItWorks.step3Body"),
+      icon: <SummaryIcon />,
+      className: "bg-orange-500/18 text-orange-100 ring-orange-300/20"
+    }
+  ];
+
+  return (
+    <section aria-label={t("howItWorks.title")} className="min-w-0 rounded-2xl border border-white/[0.07] bg-panel/70 px-4 py-4 sm:px-5 sm:py-5">
+      <div className="space-y-3 sm:space-y-4">
+        {steps.map((step, index) => (
+          <div key={step.title} className="min-w-0">
+            <div className="flex min-w-0 gap-3 sm:gap-4">
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-1 sm:h-12 sm:w-12 ${step.className}`}>
+                {step.icon}
+              </div>
+              <div className="min-w-0 pt-0.5">
+                <h2 className="text-[15px] font-semibold leading-snug text-white sm:text-base">{step.title}</h2>
+                <p className="mt-1 text-[13px] font-medium leading-relaxed text-[#b5bdca] sm:text-sm">{step.body}</p>
+              </div>
+            </div>
+            {index < steps.length - 1 ? <div className="ml-14 mt-3 h-px bg-white/[0.12] sm:ml-16 sm:mt-4" /> : null}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -85,8 +285,89 @@ export function ImageUploader({
   onError,
   disabled = false
 }: ImageUploaderProps) {
+  const { locale, t } = useLanguage();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [imageQuality, setImageQuality] = useState<ImageQuality>({ status: "idle" });
+  const fileLoadedAtParts = fileLoadedAtMs != null ? formatFileLoadedAtParts(fileLoadedAtMs, locale) : null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!previewUrl) {
+      setImageQuality({ status: "idle" });
+      return;
+    }
+
+    setImageQuality({ status: "checking" });
+
+    getImageQuality(previewUrl).then((quality) => {
+      if (!cancelled) {
+        setImageQuality(quality);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [previewUrl]);
+
+  const qualityTag = useMemo(() => {
+    switch (imageQuality.status) {
+      case "checking":
+        return {
+          label: t("uploader.qualityChecking"),
+          className: "bg-white/10 text-white/80",
+          iconClassName: "animate-pulse"
+        };
+      case "review":
+        return {
+          label: t(`uploader.qualityIssues.${imageQuality.issue}`),
+          className: "bg-amber-400/15 text-amber-100 ring-1 ring-amber-300/20",
+          iconClassName: ""
+        };
+      case "blurry":
+        return {
+          label: t(`uploader.qualityIssues.${imageQuality.issue}`),
+          className: "bg-red-500/15 text-red-100 ring-1 ring-red-300/20",
+          iconClassName: ""
+        };
+      case "sharp":
+      default:
+        return {
+          label: t("uploader.sharpImage"),
+          className: "bg-medical/95 text-white",
+          iconClassName: ""
+        };
+    }
+  }, [imageQuality, t]);
+
+  const analyzableTag = useMemo(() => {
+    switch (imageQuality.status) {
+      case "checking":
+      case "idle":
+        return {
+          label: t("uploader.analyzableChecking"),
+          className: "bg-white/10 text-white/70 ring-1 ring-white/10"
+        };
+      case "blurry":
+        return {
+          label: t("uploader.notAnalyzable"),
+          className: "bg-red-500/15 text-red-100 ring-1 ring-red-300/20"
+        };
+      case "review":
+        return {
+          label: t("uploader.analyzableWithCaution"),
+          className: "bg-amber-400/15 text-amber-100 ring-1 ring-amber-300/20"
+        };
+      case "sharp":
+      default:
+        return {
+          label: t("uploader.analyzable"),
+          className: "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-300/20"
+        };
+    }
+  }, [imageQuality.status, t]);
 
   const handleFile = useCallback(
     async (file: File | undefined) => {
@@ -95,23 +376,23 @@ export function ImageUploader({
       }
 
       if (!acceptedImageTypes.includes(file.type)) {
-        onError("Subí una imagen en formato PNG, JPG, WebP o HEIC.");
+        onError(t("uploader.invalidFormat"));
         return;
       }
 
       if (file.size > 12 * 1024 * 1024) {
-        onError("La imagen pesa demasiado. Probá con una foto de menos de 12 MB.");
+        onError(t("uploader.tooLarge"));
         return;
       }
 
       try {
         const dataUrl = await fileToDataUrl(file);
-        onImageSelected(dataUrl, file.name || "estudio-medico", file.lastModified);
+        onImageSelected(dataUrl, file.name || t("uploader.fallbackStudyName"), file.lastModified);
       } catch (error) {
-        onError(error instanceof Error ? error.message : "No se pudo cargar la imagen.");
+        onError(error instanceof Error ? error.message : t("uploader.loadFailed"));
       }
     },
-    [onError, onImageSelected]
+    [onError, onImageSelected, t]
   );
 
   const handleInputChange = useCallback(
@@ -142,6 +423,8 @@ export function ImageUploader({
         disabled={disabled}
       />
 
+      <HowItWorks />
+
       <div className="grid gap-3 sm:gap-3.5">
         <button
           type="button"
@@ -150,7 +433,7 @@ export function ImageUploader({
           disabled={disabled}
         >
           <CameraIcon />
-          Fotografiar estudio
+          {t("uploader.takePhoto")}
         </button>
         <button
           type="button"
@@ -159,35 +442,57 @@ export function ImageUploader({
           disabled={disabled}
         >
           <UploadIcon />
-          Subir imagen
+          {t("uploader.uploadImage")}
         </button>
       </div>
 
       {previewUrl ? (
         <div className="space-y-2 sm:space-y-2.5">
-          <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#8b95a8] sm:text-xs">Estudio cargado</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#8b95a8] sm:text-xs">{t("uploader.loadedStudy")}</p>
           <article className="relative flex min-w-0 gap-2.5 rounded-2xl border border-white/[0.06] bg-panel p-2.5 min-[380px]:gap-3 min-[380px]:p-3 sm:gap-3.5 sm:p-3.5">
             <div className="relative h-[150px] w-[150px] shrink-0 overflow-hidden rounded-xl bg-black/40 min-[380px]:h-[150px] min-[380px]:w-[150px] sm:h-[150px] sm:w-[150px]">
-              <Image src={previewUrl} alt="Vista previa del estudio seleccionado" fill className="object-cover" unoptimized />
+              <Image src={previewUrl} alt={t("uploader.previewAlt")} fill className="object-cover" unoptimized />
             </div>
             <div className="min-w-0 flex-1 py-0.5 pr-10 min-[380px]:pr-11 sm:pr-12">
               <h2 className="line-clamp-2 break-words text-[14px] font-semibold leading-snug text-white min-[380px]:text-[15px] sm:text-base">
-                {fileName?.replace(/\.[^.]+$/, "") || "Radiografía de tórax"}
+                {fileName?.replace(/\.[^.]+$/, "") || t("uploader.fallbackStudyName")}
               </h2>
-              <div className="mt-2 flex items-center gap-1.5 text-[12px] text-[#9aa3b2] sm:text-[13px]">
+              <div className="mt-2 flex min-w-0 items-start gap-1.5 text-[12px] leading-snug text-[#9aa3b2] sm:items-center sm:text-[13px]">
                 <CalendarIcon />
-                <span>
-                  {fileLoadedAtMs != null ? formatFileLoadedAt(fileLoadedAtMs) : "—"}
-                </span>
+                {fileLoadedAtParts ? (
+                  <span className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-1.5">
+                    <span className="min-w-0 break-words">{fileLoadedAtParts.date}</span>
+                    <span className="hidden text-[#6f7a8d] sm:inline" aria-hidden>
+                      -
+                    </span>
+                    <span className="whitespace-nowrap">{fileLoadedAtParts.time}</span>
+                  </span>
+                ) : (
+                  <span>-</span>
+                )}
               </div>
-              <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-medical/95 px-2.5 py-1 text-[11px] font-medium text-white sm:mt-3 sm:px-3 sm:py-1.5 sm:text-xs">
-                <CheckIcon />
-                Imagen nítida
+              <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3">
+                <div
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition sm:px-3 sm:py-1.5 sm:text-xs ${qualityTag.className}`}
+                  title={t("uploader.qualityTooltip")}
+                >
+                  <span className={qualityTag.iconClassName}>
+                    <CheckIcon />
+                  </span>
+                  {qualityTag.label}
+                </div>
+                <div
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition sm:px-3 sm:py-1.5 sm:text-xs ${analyzableTag.className}`}
+                  title={t("uploader.analyzableTooltip")}
+                >
+                  <CheckIcon />
+                  {analyzableTag.label}
+                </div>
               </div>
             </div>
             <button
               type="button"
-              aria-label="Quitar imagen"
+              aria-label={t("uploader.removeImage")}
               className="absolute right-1.5 top-1.5 flex h-10 w-10 min-h-0 max-h-10 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-panel/80 text-white/90 transition hover:bg-panel focus:outline-none focus:ring-2 focus:ring-medical/60 disabled:pointer-events-none disabled:opacity-50 min-[380px]:right-2 min-[380px]:top-2 sm:right-2.5 sm:top-2.5"
               onClick={onClear}
               disabled={disabled}

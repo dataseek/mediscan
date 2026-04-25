@@ -1,6 +1,12 @@
+"use client";
+
+import { useLanguage } from "@/components/LanguageProvider";
+
 export function LoadingSkeleton() {
+  const { t } = useLanguage();
+
   return (
-    <section className="min-w-0 max-w-full space-y-3.5" aria-label="Analizando estudio">
+    <section className="min-w-0 max-w-full space-y-3.5" aria-label={t("loading.ariaLabel")}>
       <div className="rounded-2xl border border-white/[0.06] bg-panel p-4">
         <div className="h-3 w-24 animate-softPulse rounded-full bg-white/[0.1]" />
         <div className="mt-3 h-4 w-40 animate-softPulse rounded-full bg-white/[0.08]" />

@@ -1,27 +1,31 @@
+"use client";
+
+import { useLanguage } from "@/components/LanguageProvider";
 import type { MedicalValue } from "@/lib/types";
 
-const estadoStyles: Record<MedicalValue["estado"], { dot: string; text: string; card: string; label: string }> = {
+const estadoStyles: Record<MedicalValue["estado"], { dot: string; text: string; card: string; labelPath: string }> = {
   normal: {
     dot: "bg-emerald-400",
     text: "text-emerald-300",
     card: "border-emerald-400/20 bg-emerald-400/5",
-    label: "En rango"
+    labelPath: "result.status.normal"
   },
-  atención: {
+  atencion: {
     dot: "bg-amber-300",
     text: "text-amber-200",
     card: "border-amber-300/25 bg-amber-300/8",
-    label: "Atención"
+    labelPath: "result.status.attention"
   },
   revisar: {
     dot: "bg-red-400",
     text: "text-red-200",
     card: "border-red-400/35 bg-red-500/10",
-    label: "Revisar"
+    labelPath: "result.status.review"
   }
 };
 
 export function ValueCard({ value }: { value: MedicalValue }) {
+  const { t } = useLanguage();
   const styles = estadoStyles[value.estado];
 
   return (
@@ -33,7 +37,7 @@ export function ValueCard({ value }: { value: MedicalValue }) {
         </div>
         <span className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${styles.text}`}>
           <span className={`h-2.5 w-2.5 rounded-full ${styles.dot}`} />
-          {styles.label}
+          {t(styles.labelPath)}
         </span>
       </div>
       <p className="mt-3 text-sm leading-6 text-slate-200">{value.explicacion}</p>
