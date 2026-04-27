@@ -232,37 +232,37 @@ function HowItWorks() {
       title: t("howItWorks.step1Title"),
       body: t("howItWorks.step1Body"),
       icon: <ScanIcon />,
-      className: "bg-medical/22 text-emerald-100 ring-medical/25"
+      className: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-medical/22 dark:text-emerald-100 dark:ring-medical/25"
     },
     {
       title: t("howItWorks.step2Title"),
       body: t("howItWorks.step2Body"),
       icon: <ClockIcon />,
-      className: "bg-blue-500/18 text-blue-100 ring-blue-300/20"
+      className: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/18 dark:text-blue-100 dark:ring-blue-300/20"
     },
     {
       title: t("howItWorks.step3Title"),
       body: t("howItWorks.step3Body"),
       icon: <SummaryIcon />,
-      className: "bg-orange-500/18 text-orange-100 ring-orange-300/20"
+      className: "bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-500/18 dark:text-orange-100 dark:ring-orange-300/20"
     }
   ];
 
   return (
-    <section aria-label={t("howItWorks.title")} className="min-w-0 rounded-2xl border border-white/[0.07] bg-panel/70 px-4 py-4 sm:px-5 sm:py-5">
-      <div className="space-y-3 sm:space-y-4">
+    <section aria-label={t("howItWorks.title")} className="min-w-0 rounded-[1.65rem] border border-[var(--app-border)] bg-[var(--app-card)] px-4 py-4 shadow-[var(--app-shadow)] sm:px-5 sm:py-5">
+      <div className="space-y-3.5 sm:space-y-4">
         {steps.map((step, index) => (
           <div key={step.title} className="min-w-0">
             <div className="flex min-w-0 gap-3 sm:gap-4">
-              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-1 sm:h-12 sm:w-12 ${step.className}`}>
+              <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ring-1 sm:h-16 sm:w-16 ${step.className}`}>
                 {step.icon}
               </div>
               <div className="min-w-0 pt-0.5">
-                <h2 className="text-[15px] font-semibold leading-snug text-white sm:text-base">{step.title}</h2>
-                <p className="mt-1 text-[13px] font-medium leading-relaxed text-[#b5bdca] sm:text-sm">{step.body}</p>
+                <h2 className="text-[17px] font-bold leading-snug text-[var(--app-text-strong)] sm:text-lg">{step.title}</h2>
+                <p className="mt-1.5 text-[15px] font-medium leading-relaxed text-[var(--app-muted)] sm:text-base">{step.body}</p>
               </div>
             </div>
-            {index < steps.length - 1 ? <div className="ml-14 mt-3 h-px bg-white/[0.12] sm:ml-16 sm:mt-4" /> : null}
+            {index < steps.length - 1 ? <div className="ml-[4.25rem] mt-3.5 h-px bg-[var(--app-border)] sm:ml-20 sm:mt-4" /> : null}
           </div>
         ))}
       </div>
@@ -444,7 +444,7 @@ export function ImageUploader({
       <div className="grid gap-3 sm:gap-3.5">
         <button
           type="button"
-          className="flex min-h-[48px] w-full min-w-0 items-center justify-center gap-2.5 rounded-2xl bg-medical px-3 text-[14px] font-semibold leading-tight text-white shadow-sm shadow-black/15 transition hover:bg-medicalHover focus:outline-none focus:ring-2 focus:ring-emerald-400/35 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 min-[380px]:min-h-[52px] min-[380px]:px-4 min-[380px]:text-[15px] sm:min-h-[54px] sm:gap-3 sm:text-base"
+          className="flex min-h-[62px] w-full min-w-0 items-center justify-center gap-3 rounded-[1.35rem] bg-[var(--app-primary)] px-4 text-[18px] font-bold leading-tight text-white shadow-lg shadow-black/15 transition hover:bg-[var(--app-primary-hover)] focus:outline-none focus:ring-4 focus:ring-blue-400/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[66px] sm:text-xl"
           onClick={() => cameraInputRef.current?.click()}
           disabled={disabled}
         >
@@ -453,7 +453,7 @@ export function ImageUploader({
         </button>
         <button
           type="button"
-          className="flex min-h-[48px] w-full min-w-0 items-center justify-center gap-2.5 rounded-2xl border border-white/[0.08] bg-panelMuted px-3 text-[14px] font-semibold leading-tight text-white/95 transition hover:border-white/[0.12] hover:bg-panelSoft focus:outline-none focus:ring-2 focus:ring-medical/40 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 min-[380px]:min-h-[52px] min-[380px]:px-4 min-[380px]:text-[15px] sm:min-h-[54px] sm:gap-3 sm:text-base"
+          className="flex min-h-[62px] w-full min-w-0 items-center justify-center gap-3 rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card)] px-4 text-[18px] font-bold leading-tight text-[var(--app-text-strong)] shadow-sm transition hover:bg-[var(--app-card-soft)] focus:outline-none focus:ring-4 focus:ring-medical/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[66px] sm:text-xl"
           onClick={() => galleryInputRef.current?.click()}
           disabled={disabled}
         >
@@ -464,8 +464,8 @@ export function ImageUploader({
 
       {previewUrl ? (
         <div className="space-y-2 sm:space-y-2.5">
-          <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#8b95a8] sm:text-xs">{t("uploader.loadedStudy")}</p>
-          <article className="relative flex min-w-0 gap-2.5 rounded-2xl border border-white/[0.06] bg-panel p-2.5 min-[380px]:gap-3 min-[380px]:p-3 sm:gap-3.5 sm:p-3.5">
+          <p className="text-[12px] font-bold uppercase tracking-[0.06em] text-[var(--app-faint)] sm:text-sm">{t("uploader.loadedStudy")}</p>
+          <article className="relative flex min-w-0 gap-2.5 rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card)] p-2.5 shadow-[var(--app-shadow)] min-[380px]:gap-3 min-[380px]:p-3 sm:gap-3.5 sm:p-3.5">
             <div className="relative flex h-[150px] w-[150px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black/40 min-[380px]:h-[150px] min-[380px]:w-[150px] sm:h-[150px] sm:w-[150px]">
               {isPdf ? (
                 <div className="flex h-full w-full flex-col items-center justify-center bg-red-500/10 px-3 text-center">
@@ -478,10 +478,10 @@ export function ImageUploader({
               )}
             </div>
             <div className="min-w-0 flex-1 py-0.5 pr-10 min-[380px]:pr-11 sm:pr-12">
-              <h2 className="line-clamp-2 break-words text-[14px] font-semibold leading-snug text-white min-[380px]:text-[15px] sm:text-base">
+              <h2 className="line-clamp-2 break-words text-[16px] font-bold leading-snug text-[var(--app-text-strong)] min-[380px]:text-[17px] sm:text-lg">
                 {fileName?.replace(/\.[^.]+$/, "") || t("uploader.fallbackStudyName")}
               </h2>
-              <div className="mt-2 flex min-w-0 items-start gap-1.5 text-[12px] leading-snug text-[#9aa3b2] sm:items-center sm:text-[13px]">
+              <div className="mt-2 flex min-w-0 items-start gap-1.5 text-[13px] leading-snug text-[var(--app-muted)] sm:items-center sm:text-sm">
                 <CalendarIcon />
                 {fileLoadedAtParts ? (
                   <span className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-1.5">

@@ -3,10 +3,48 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
+  background: #f5f9ff;
+  color: #10213f;
+  --mediscan-text-zoom: 1;
+  --app-bg: #f5f9ff;
+  --app-bg-soft: #eaf4ff;
+  --app-card: #ffffff;
+  --app-card-muted: #eef6ff;
+  --app-card-soft: #f8fbff;
+  --app-text: #10213f;
+  --app-text-strong: #07152e;
+  --app-muted: #5e6d84;
+  --app-faint: #7c8aa1;
+  --app-border: rgba(31, 78, 121, 0.14);
+  --app-border-strong: rgba(18, 101, 211, 0.22);
+  --app-primary: #1265d3;
+  --app-primary-hover: #0e56b5;
+  --app-medical: #0f9b78;
+  --app-medical-hover: #0b8064;
+  --app-shadow: 0 14px 38px rgba(18, 55, 95, 0.12);
+}
+
+html[data-theme="dark"] {
   color-scheme: dark;
   background: #010b14;
   color: #f8fafc;
-  --mediscan-text-zoom: 1;
+  --app-bg: #010b14;
+  --app-bg-soft: #07111b;
+  --app-card: #0b1826;
+  --app-card-muted: #172d45;
+  --app-card-soft: #10233a;
+  --app-text: #f8fafc;
+  --app-text-strong: #ffffff;
+  --app-muted: #b5bdca;
+  --app-faint: #8b95a8;
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-border-strong: rgba(61, 212, 165, 0.32);
+  --app-primary: #1265d3;
+  --app-primary-hover: #0e56b5;
+  --app-medical: #108b67;
+  --app-medical-hover: #0b6f54;
+  --app-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -27,9 +65,9 @@ body {
   margin: 0;
   overflow-x: clip;
   background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(16, 124, 86, 0.12), transparent 55%),
-    #010b14;
-  color: #f8fafc;
+    radial-gradient(ellipse 120% 70% at 50% -20%, rgba(18, 101, 211, 0.10), transparent 58%),
+    var(--app-bg);
+  color: var(--app-text);
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
@@ -57,7 +95,93 @@ img {
 }
 
 ::selection {
-  background: rgba(16, 124, 86, 0.45);
+  background: rgba(18, 101, 211, 0.24);
+}
+
+.bg-ink {
+  background-color: var(--app-bg) !important;
+}
+
+.bg-panel {
+  background-color: var(--app-card) !important;
+}
+
+.bg-panelMuted {
+  background-color: var(--app-card-muted) !important;
+}
+
+.bg-panelSoft {
+  background-color: var(--app-card-soft) !important;
+}
+
+.bg-medical {
+  background-color: var(--app-medical) !important;
+}
+
+.hover\:bg-medicalHover:hover {
+  background-color: var(--app-medical-hover) !important;
+}
+
+.text-medical {
+  color: var(--app-medical) !important;
+}
+
+html[data-theme="light"] .text-white,
+html[data-theme="light"] .text-white\/95,
+html[data-theme="light"] .text-white\/90,
+html[data-theme="light"] .text-white\/80,
+html[data-theme="light"] .text-white\/75,
+html[data-theme="light"] .text-white\/70 {
+  color: var(--app-text-strong) !important;
+}
+
+html[data-theme="light"] .text-white\/55,
+html[data-theme="light"] .text-white\/50,
+html[data-theme="light"] .text-white\/35 {
+  color: var(--app-muted) !important;
+}
+
+html[data-theme="light"] .text-\[\#8b95a8\],
+html[data-theme="light"] .text-\[\#9aa3b2\],
+html[data-theme="light"] .text-\[\#b4bcc9\],
+html[data-theme="light"] .text-\[\#b5bdca\],
+html[data-theme="light"] .text-\[\#c4ccd8\],
+html[data-theme="light"] .text-\[\#c5cbd5\],
+html[data-theme="light"] .text-\[\#d1d6df\],
+html[data-theme="light"] .text-\[\#dce3ec\] {
+  color: var(--app-muted) !important;
+}
+
+html[data-theme="light"] .border-white\/\[0\.04\],
+html[data-theme="light"] .border-white\/\[0\.06\],
+html[data-theme="light"] .border-white\/\[0\.07\],
+html[data-theme="light"] .border-white\/\[0\.08\],
+html[data-theme="light"] .border-white\/\[0\.10\],
+html[data-theme="light"] .border-white\/\[0\.12\] {
+  border-color: var(--app-border) !important;
+}
+
+html[data-theme="light"] .bg-white\/\[0\.035\],
+html[data-theme="light"] .bg-white\/\[0\.04\],
+html[data-theme="light"] .bg-white\/\[0\.05\],
+html[data-theme="light"] .bg-white\/\[0\.06\],
+html[data-theme="light"] .bg-white\/\[0\.08\],
+html[data-theme="light"] .bg-white\/\[0\.10\],
+html[data-theme="light"] .bg-\[\#0a121c\]\/85,
+html[data-theme="light"] .bg-\[\#0a121c\]\/90 {
+  background-color: var(--app-card-soft) !important;
+}
+
+html[data-theme="light"] .divide-white\/\[0\.06\] > :not([hidden]) ~ :not([hidden]),
+html[data-theme="light"] .bg-white\/\[0\.12\] {
+  border-color: var(--app-border) !important;
+  background-color: var(--app-border) !important;
+}
+
+html[data-theme="light"] .shadow-black\/15,
+html[data-theme="light"] .shadow-black\/20,
+html[data-theme="light"] .shadow-black\/30 {
+  box-shadow: var(--app-shadow) !important;
 }
 
 @keyframes loading-slide {
@@ -70,32 +194,6 @@ img {
   }
 }
 
-.mediscan-map-pin {
-  display: flex;
-  height: 100%;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #ffffff;
-  border-radius: 9999px;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
-}
-
-.mediscan-map-pin-user {
-  background: #3b82f6;
-}
-
-.mediscan-map-pin-pharmacy {
-  background: #16875f;
-}
-
-.leaflet-container {
-  font-family: inherit;
-}
 
 @media (prefers-reduced-motion: reduce) {
   *,

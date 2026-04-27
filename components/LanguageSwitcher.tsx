@@ -8,7 +8,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className={compact ? "inline-flex items-center gap-2" : "space-y-2"}>
-      {!compact ? <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#8b95a8]">{t("language.label")}</p> : null}
+      {!compact ? <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-faint)]">{t("language.label")}</p> : null}
       <div
         className="inline-flex items-center gap-2"
         role="group"
@@ -19,10 +19,10 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
             key={option.code}
             type="button"
             onClick={option.onSelect}
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border p-0 text-[11px] font-semibold leading-none transition sm:h-10 sm:w-10 sm:text-xs ${
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border p-0 text-[12px] font-bold leading-none transition sm:h-12 sm:w-12 sm:text-sm ${
               option.isActive
                 ? "border-medical bg-medical text-white shadow-sm shadow-medical/20"
-                : "border-white/[0.08] bg-panelMuted text-white/70 hover:border-white/[0.16] hover:bg-white/[0.06]"
+                : "border-[var(--app-border)] bg-[var(--app-card-soft)] text-[var(--app-text)] hover:bg-[var(--app-card-muted)]"
             }`}
             aria-pressed={option.isActive}
           >

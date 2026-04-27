@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MediScan">
+  <rect width="512" height="512" rx="120" fill="#f5f9ff"/>
+  <circle cx="256" cy="256" r="196" fill="#e7f8f3"/>
+  <path d="M256 390l-30.6-27.8C116.7 263.5 72 223 72 160.2 72 108 113 67 165.2 67c29.5 0 57.9 13.7 76.8 35.4C260.9 80.7 289.3 67 318.8 67 371 67 412 108 412 160.2c0 62.8-44.7 103.3-153.4 202L256 390Z" fill="none" stroke="#0f9b78" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M102 237h79l31-101 47 196 39-140 33 45h79" fill="none" stroke="#1265d3" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

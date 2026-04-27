@@ -64,7 +64,7 @@ function SpeakerIcon() {
 }
 
 const resultCardArticleClass =
-  "grid min-w-0 max-w-full grid-cols-[44px_minmax(0,1fr)_20px] items-start gap-x-2.5 gap-y-3 rounded-2xl border border-[rgba(13,61,50,1)] bg-panel p-3 min-[380px]:grid-cols-[48px_minmax(0,1fr)_20px] min-[380px]:gap-x-3 min-[380px]:p-3.5 sm:grid-cols-[52px_minmax(0,1fr)_22px] sm:gap-x-3.5 sm:p-4";
+  "grid min-w-0 max-w-full grid-cols-[52px_minmax(0,1fr)_20px] items-start gap-x-3 gap-y-3 rounded-[1.35rem] border border-[var(--app-border-strong)] bg-[var(--app-card)] p-4 shadow-[var(--app-shadow)] min-[380px]:grid-cols-[56px_minmax(0,1fr)_20px] min-[380px]:gap-x-3.5 sm:grid-cols-[60px_minmax(0,1fr)_22px] sm:gap-x-4 sm:p-5";
 
 function ResultCard({
   icon,
@@ -89,23 +89,23 @@ function ResultCard({
       style={animationDelayMs ? { animationDelay: `${animationDelayMs}ms` } : undefined}
     >
       <div
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl min-[380px]:h-12 min-[380px]:w-12 sm:h-[52px] sm:w-[52px] ${iconClassName}`}
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl min-[380px]:h-14 min-[380px]:w-14 sm:h-[58px] sm:w-[58px] ${iconClassName}`}
       >
         {icon}
       </div>
       <div className="min-w-0 self-center pt-0.5">
-        <h3 className="break-words text-[14px] font-semibold leading-tight text-white min-[380px]:text-[15px] sm:text-base">
+        <h3 className="break-words text-[17px] font-bold leading-tight text-[var(--app-text-strong)] min-[380px]:text-lg sm:text-xl">
           {title}
         </h3>
       </div>
-      <div className="flex h-10 items-center justify-end self-center pt-0.5 min-[380px]:h-12 sm:h-[52px]">
+      <div className="flex h-12 items-center justify-end self-center pt-0.5 min-[380px]:h-14 sm:h-[58px]">
         <ChevronIcon />
       </div>
       <div className="col-span-3 mt-2 min-w-0 min-[380px]:mt-2.5 sm:mt-3">
         {prose ? (
           children
         ) : (
-          <div className="min-w-0 break-words text-[12px] leading-relaxed text-[#b4bcc9] min-[380px]:text-[13px] sm:text-[14px] sm:leading-relaxed">
+          <div className="min-w-0 break-words text-[15px] leading-relaxed text-[var(--app-muted)] sm:text-base sm:leading-relaxed">
             {children}
           </div>
         )}
@@ -192,7 +192,7 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
     <section className="min-w-0 space-y-3.5 sm:space-y-4" aria-live="polite">
       <button
         type="button"
-        className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-panelMuted px-3 text-[14px] font-semibold text-white/95 transition hover:border-white/[0.12] hover:bg-panelSoft focus:outline-none focus:ring-2 focus:ring-medical/50"
+        className="flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card-muted)] px-4 text-[17px] font-bold text-[var(--app-text-strong)] transition hover:bg-[var(--app-card-soft)] focus:outline-none focus:ring-4 focus:ring-medical/25"
         onClick={handleSpeak}
       >
         <SpeakerIcon />

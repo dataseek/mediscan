@@ -11,18 +11,20 @@ const textScaleOptions = [
 
 export function AccessibilityControls() {
   const { t } = useLanguage();
-  const { textScale, setTextScale } = useAccessibility();
+  const { textScale, setTextScale, themeMode, setThemeMode } = useAccessibility();
 
   return (
-    <div className="space-y-2">
-      <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#8b95a8]">{t("accessibility.title")}</p>
-      <div className="grid grid-cols-3 gap-1.5" role="group" aria-label={t("accessibility.textSizeAriaLabel")}>
+    <div className="space-y-3">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--app-faint)]">{t("accessibility.title")}</p>
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label={t("accessibility.textSizeAriaLabel")}>
         {textScaleOptions.map((option) => (
           <button
             key={option.value}
             type="button"
-            className={`min-h-[38px] rounded-xl px-2 text-[12px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-medical/60 ${
-              textScale === option.value ? "bg-medical text-white" : "bg-white/[0.05] text-white/75 hover:bg-white/[0.08]"
+            className={`min-h-[44px] rounded-2xl px-2 text-[13px] font-bold transition focus:outline-none focus:ring-2 focus:ring-medical/60 ${
+              textScale === option.value
+                ? "bg-medical text-white"
+                : "border border-[var(--app-border)] bg-[var(--app-card-soft)] text-[var(--app-text)] hover:bg-[var(--app-card-muted)]"
             }`}
             aria-pressed={textScale === option.value}
             onClick={() => setTextScale(option.value)}
@@ -31,7 +33,33 @@ export function AccessibilityControls() {
           </button>
         ))}
       </div>
-      <p className="text-[12px] leading-relaxed text-[#9aa3b2]">{t("accessibility.textSizeHint")}</p>
+      <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("accessibility.themeAriaLabel")}>
+        <button
+          type="button"
+          className={`min-h-[44px] rounded-2xl px-3 text-[13px] font-bold transition focus:outline-none focus:ring-2 focus:ring-medical/60 ${
+            themeMode === "light"
+              ? "bg-medical text-white"
+              : "border border-[var(--app-border)] bg-[var(--app-card-soft)] text-[var(--app-text)] hover:bg-[var(--app-card-muted)]"
+          }`}
+          aria-pressed={themeMode === "light"}
+          onClick={() => setThemeMode("light")}
+        >
+          {t("accessibility.lightMode")}
+        </button>
+        <button
+          type="button"
+          className={`min-h-[44px] rounded-2xl px-3 text-[13px] font-bold transition focus:outline-none focus:ring-2 focus:ring-medical/60 ${
+            themeMode === "dark"
+              ? "bg-medical text-white"
+              : "border border-[var(--app-border)] bg-[var(--app-card-soft)] text-[var(--app-text)] hover:bg-[var(--app-card-muted)]"
+          }`}
+          aria-pressed={themeMode === "dark"}
+          onClick={() => setThemeMode("dark")}
+        >
+          {t("accessibility.darkMode")}
+        </button>
+      </div>
+      <p className="text-[13px] leading-relaxed text-[var(--app-muted)]">{t("accessibility.textSizeHint")}</p>
     </div>
   );
 }

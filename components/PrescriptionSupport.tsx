@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { PharmacyMap } from "@/components/PharmacyMap";
 import type { MedicalValue } from "@/lib/types";
 
 interface Pharmacy {
@@ -11,13 +10,12 @@ interface Pharmacy {
   lat: number;
   lon: number;
   distanceKm: number;
+  address: string | null;
   openingHours: string | null;
-}
-
-interface LocationState {
-  lat: number;
-  lon: number;
-  countryCode: string;
+  openNow: boolean | null;
+  is24h: boolean;
+  mapsUrl: string;
+  source: "google" | "osm";
 }
 
 type LookupStatus = "idle" | "loading" | "ready" | "error" | "denied";
@@ -32,19 +30,6 @@ function normalizeMedicationName(value: string) {
     .trim();
 }
 
-function distanceKm(fromLat: number, fromLon: number, toLat: number, toLon: number) {
-  const radiusKm = 6371;
-  const dLat = ((toLat - fromLat) * Math.PI) / 180;
-  const dLon = ((toLon - fromLon) * Math.PI) / 180;
-  const lat1 = (fromLat * Math.PI) / 180;
-  const lat2 = (toLat * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-
-  return radiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 function getPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -53,69 +38,6 @@ function getPosition(): Promise<GeolocationPosition> {
       timeout: 12000
     });
   });
-}
-
-async function getCountryCode(lat: number, lon: number) {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=3&addressdetails=1`
-    );
-    const data = (await response.json()) as { address?: { country_code?: string } };
-
-    return data.address?.country_code?.toLowerCase() ?? "us";
-  } catch {
-    return "us";
-  }
-}
-
-async function getNearbyPharmacies(lat: number, lon: number): Promise<Pharmacy[]> {
-  const query = `
-    [out:json][timeout:15];
-    (
-      node["amenity"="pharmacy"](around:5000,${lat},${lon});
-      way["amenity"="pharmacy"](around:5000,${lat},${lon});
-      relation["amenity"="pharmacy"](around:5000,${lat},${lon});
-    );
-    out center tags 12;
-  `;
-
-  const response = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-    body: new URLSearchParams({ data: query })
-  });
-  const data = (await response.json()) as {
-    elements?: Array<{
-      id: number;
-      lat?: number;
-      lon?: number;
-      center?: { lat?: number; lon?: number };
-      tags?: { name?: string; opening_hours?: string };
-      type?: string;
-    }>;
-  };
-
-  return (data.elements ?? [])
-    .map((item) => {
-      const pharmacyLat = item.lat ?? item.center?.lat;
-      const pharmacyLon = item.lon ?? item.center?.lon;
-
-      if (typeof pharmacyLat !== "number" || typeof pharmacyLon !== "number") {
-        return null;
-      }
-
-      return {
-        id: `${item.type ?? "osm"}-${item.id}`,
-        name: item.tags?.name?.trim() || "Pharmacy",
-        lat: pharmacyLat,
-        lon: pharmacyLon,
-        distanceKm: distanceKm(lat, lon, pharmacyLat, pharmacyLon),
-        openingHours: item.tags?.opening_hours?.trim() || null
-      };
-    })
-    .filter((item): item is Pharmacy => item !== null)
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, 5);
 }
 
 function MapPinIcon() {
@@ -132,17 +54,32 @@ function MapPinIcon() {
   );
 }
 
-function isOpen24Hours(openingHours: string | null) {
-  if (!openingHours) {
-    return false;
+function getHoursSummary(pharmacy: Pharmacy, translate: (path: string) => string) {
+  if (pharmacy.is24h) {
+    return {
+      label: translate("prescriptionSupport.open24h"),
+      details: pharmacy.openingHours ?? translate("prescriptionSupport.open24hDetails"),
+      className: "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-300/20"
+    };
   }
 
-  const normalized = openingHours.toLowerCase().replace(/\s+/g, "");
-  return normalized.includes("24/7") || normalized.includes("00:00-24:00") || normalized.includes("00:00-00:00");
-}
+  if (pharmacy.openNow === true) {
+    return {
+      label: translate("prescriptionSupport.openNow"),
+      details: pharmacy.openingHours ?? translate("prescriptionSupport.hoursUnavailableDetails"),
+      className: "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-300/20"
+    };
+  }
 
-function getHoursSummary(openingHours: string | null, translate: (path: string) => string) {
-  if (!openingHours) {
+  if (pharmacy.openNow === false) {
+    return {
+      label: translate("prescriptionSupport.closedNow"),
+      details: pharmacy.openingHours ?? translate("prescriptionSupport.hoursUnavailableDetails"),
+      className: "bg-red-500/15 text-red-100 ring-1 ring-red-300/20"
+    };
+  }
+
+  if (!pharmacy.openingHours) {
     return {
       label: translate("prescriptionSupport.hoursUnavailable"),
       details: translate("prescriptionSupport.hoursUnavailableDetails"),
@@ -150,17 +87,9 @@ function getHoursSummary(openingHours: string | null, translate: (path: string) 
     };
   }
 
-  if (isOpen24Hours(openingHours)) {
-    return {
-      label: translate("prescriptionSupport.open24h"),
-      details: openingHours,
-      className: "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-300/20"
-    };
-  }
-
   return {
     label: translate("prescriptionSupport.not24h"),
-    details: openingHours,
+    details: pharmacy.openingHours,
     className: "bg-amber-400/15 text-amber-100 ring-1 ring-amber-300/20"
   };
 }
@@ -168,7 +97,6 @@ function getHoursSummary(openingHours: string | null, translate: (path: string) 
 export function PrescriptionSupport({ medications }: { medications: MedicalValue[] }) {
   const { t } = useLanguage();
   const [status, setStatus] = useState<LookupStatus>("idle");
-  const [location, setLocation] = useState<LocationState | null>(null);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
 
   const readableMedications = useMemo(() => {
@@ -192,11 +120,14 @@ export function PrescriptionSupport({ medications }: { medications: MedicalValue
       const position = await getPosition();
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
-      const countryCode = await getCountryCode(lat, lon);
-      const nearby = await getNearbyPharmacies(lat, lon);
+      const response = await fetch(`/api/pharmacies?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
+      const data = (await response.json()) as { pharmacies?: Pharmacy[]; error?: string };
 
-      setLocation({ lat, lon, countryCode });
-      setPharmacies(nearby);
+      if (!response.ok || !Array.isArray(data.pharmacies)) {
+        throw new Error(data.error ?? "Lookup failed");
+      }
+
+      setPharmacies(data.pharmacies);
       setStatus("ready");
     } catch (error) {
       const code = typeof error === "object" && error !== null && "code" in error ? (error as { code?: number }).code : null;
@@ -215,19 +146,19 @@ export function PrescriptionSupport({ medications }: { medications: MedicalValue
   }
 
   return (
-    <article className="grid min-w-0 max-w-full grid-cols-[44px_minmax(0,1fr)_20px] items-start gap-x-2.5 gap-y-3 rounded-2xl border border-[rgba(13,61,50,1)] bg-panel p-3 animate-fadeIn [will-change:transform,opacity] min-[380px]:grid-cols-[48px_minmax(0,1fr)_20px] min-[380px]:gap-x-3 min-[380px]:p-3.5 sm:grid-cols-[52px_minmax(0,1fr)_22px] sm:gap-x-3.5 sm:p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#173a32] text-[#3dd4a5] min-[380px]:h-12 min-[380px]:w-12 sm:h-[52px] sm:w-[52px]">
+    <article className="grid min-w-0 max-w-full grid-cols-[52px_minmax(0,1fr)_20px] items-start gap-x-3 gap-y-3 rounded-[1.35rem] border border-[var(--app-border-strong)] bg-[var(--app-card)] p-4 shadow-[var(--app-shadow)] animate-fadeIn [will-change:transform,opacity] min-[380px]:grid-cols-[56px_minmax(0,1fr)_20px] min-[380px]:gap-x-3.5 sm:grid-cols-[60px_minmax(0,1fr)_22px] sm:gap-x-4 sm:p-5">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 min-[380px]:h-14 min-[380px]:w-14 sm:h-[58px] sm:w-[58px]">
         <MapPinIcon />
       </div>
       <div className="min-w-0 self-center pt-0.5">
-        <h3 className="break-words text-[14px] font-semibold leading-tight text-white min-[380px]:text-[15px] sm:text-base">
+        <h3 className="break-words text-[17px] font-bold leading-tight text-[var(--app-text-strong)] min-[380px]:text-lg sm:text-xl">
           {t("prescriptionSupport.title")}
         </h3>
       </div>
       <div />
       <div className="col-span-3 mt-2 min-w-0 space-y-3 min-[380px]:mt-2.5 sm:mt-3">
         {status === "idle" || status === "loading" ? (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] p-3 text-[13px] text-[#b4bcc9]">
+          <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-card-soft)] p-3 text-[15px] text-[var(--app-muted)]">
             {t("prescriptionSupport.loading")}
           </div>
         ) : null}
@@ -246,43 +177,37 @@ export function PrescriptionSupport({ medications }: { medications: MedicalValue
 
         {status === "ready" ? (
           <div className="space-y-3">
-            {location ? (
-              <div className="relative h-52 overflow-hidden rounded-xl border border-white/[0.08] bg-[#0a121c]">
-                <PharmacyMap location={location} pharmacies={pharmacies} userLabel={t("prescriptionSupport.yourLocation")} />
-                <div className="absolute bottom-2 left-2 z-30 rounded-lg border border-black/10 bg-[#07111b]/90 px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-lg">
-                  {t("prescriptionSupport.mapLegend")}
-                </div>
-              </div>
-            ) : null}
-
             {pharmacies.length > 0 ? (
               <ul className="space-y-2">
                 {pharmacies.map((pharmacy, index) => {
-                  const hours = getHoursSummary(pharmacy.openingHours, t);
+                  const hours = getHoursSummary(pharmacy, t);
 
                   return (
-                  <li key={pharmacy.id} className="rounded-xl border border-white/[0.06] bg-white/[0.035] p-3">
+                  <li key={pharmacy.id} className="rounded-2xl border border-[var(--app-border)] bg-[var(--app-card-soft)] p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="min-w-0 break-words text-[13px] font-semibold text-white">
+                      <p className="min-w-0 break-words text-[16px] font-bold text-[var(--app-text-strong)]">
                         <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-medical text-[11px] font-bold text-white">
                           {index + 1}
                         </span>
                         {pharmacy.name}
                       </p>
-                      <span className="shrink-0 text-[12px] text-[#9aa3b2]">{pharmacy.distanceKm.toFixed(1)} km</span>
+                      <span className="shrink-0 text-[13px] font-semibold text-[var(--app-muted)]">{pharmacy.distanceKm.toFixed(1)} km</span>
                     </div>
+                    {pharmacy.address ? (
+                      <p className="mt-1.5 break-words text-[14px] leading-relaxed text-[var(--app-muted)]">{pharmacy.address}</p>
+                    ) : null}
                     <div className="mt-2 space-y-1.5">
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${hours.className}`}>
                         {hours.label}
                       </span>
-                      <p className="text-[12px] leading-relaxed text-[#b4bcc9]">
-                        <span className="font-semibold text-white/90">{t("prescriptionSupport.hoursLabel")} </span>
+                      <p className="text-[14px] leading-relaxed text-[var(--app-muted)]">
+                        <span className="font-bold text-[var(--app-text-strong)]">{t("prescriptionSupport.hoursLabel")} </span>
                         {hours.details}
                       </p>
                     </div>
                     <a
-                      className="mt-2 inline-flex text-[12px] font-semibold text-[#3dd4a5] hover:text-[#64e4bb]"
-                      href={`https://www.google.com/maps/search/?api=1&query=${pharmacy.lat},${pharmacy.lon}`}
+                      className="mt-3 inline-flex min-h-[44px] items-center rounded-2xl bg-[var(--app-primary)] px-4 text-[14px] font-bold text-white hover:bg-[var(--app-primary-hover)]"
+                      href={pharmacy.mapsUrl}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -293,7 +218,7 @@ export function PrescriptionSupport({ medications }: { medications: MedicalValue
                 })}
               </ul>
             ) : (
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] p-3 text-[13px] text-[#b4bcc9]">
+              <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-card-soft)] p-3 text-[15px] text-[var(--app-muted)]">
                 {t("prescriptionSupport.noPharmacies")}
               </div>
             )}

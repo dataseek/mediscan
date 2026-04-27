@@ -83,7 +83,7 @@ export default function HomePage() {
   }, [locale, previewUrl, t]);
 
   return (
-    <main className="relative box-border mx-auto flex min-h-screen w-full max-w-none flex-col bg-ink pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.5rem,env(safe-area-inset-top,0px))] text-white antialiased sm:max-w-2xl sm:px-5 sm:pb-8 sm:pt-5 lg:max-w-4xl">
+    <main className="relative box-border mx-auto flex min-h-screen w-full max-w-none flex-col bg-ink pb-[max(6rem,env(safe-area-inset-bottom,0px))] pl-[max(0.9rem,env(safe-area-inset-left,0px))] pr-[max(0.9rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))] text-[var(--app-text)] antialiased sm:max-w-2xl sm:px-5 sm:pb-8 sm:pt-5 lg:max-w-4xl">
       <Header />
 
       <div className="min-h-0 min-w-0 flex-1 space-y-4 sm:space-y-5 lg:space-y-6">
@@ -102,7 +102,7 @@ export default function HomePage() {
             {previewUrl && !result ? (
               <button
                 type="button"
-                className="relative flex min-h-[48px] w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl bg-medical px-3 text-[14px] font-semibold leading-tight text-white shadow-sm shadow-black/20 transition hover:bg-medicalHover focus:outline-none focus:ring-2 focus:ring-emerald-400/40 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-80 min-[380px]:min-h-[52px] min-[380px]:px-4 min-[380px]:text-[15px] sm:min-h-[54px] sm:text-base"
+                className="relative flex min-h-[58px] w-full min-w-0 items-center justify-center overflow-hidden rounded-3xl bg-medical px-4 text-[17px] font-bold leading-tight text-white shadow-lg shadow-black/20 transition hover:bg-medicalHover focus:outline-none focus:ring-4 focus:ring-emerald-400/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[62px] sm:text-lg"
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
                 aria-busy={isAnalyzing}
@@ -138,6 +138,30 @@ export default function HomePage() {
           <div className="min-w-0">{result ? <AnalysisResult result={result} /> : null}</div>
         </div>
       </div>
+      <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-none border-t border-[var(--app-border)] bg-[var(--app-card)] px-5 py-2.5 shadow-[0_-10px_30px_rgba(18,55,95,0.10)] sm:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-3 gap-2 text-center text-[12px] font-bold text-[var(--app-muted)]">
+          <a href="/" className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl text-[var(--app-primary)]">
+            <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+              <path d="M4 11.5 12 4l8 7.5v7a1.5 1.5 0 0 1-1.5 1.5H15v-5.5H9V20H5.5A1.5 1.5 0 0 1 4 18.5v-7Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            </svg>
+            Inicio
+          </a>
+          <a href="/historial" className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl">
+            <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+              <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Historial
+          </a>
+          <a href="/cuenta" className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl">
+            <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+              <path d="M20 21a8 8 0 0 0-16 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M12 13a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" strokeWidth="1.8" />
+            </svg>
+            Perfil
+          </a>
+        </div>
+      </nav>
     </main>
   );
 }
