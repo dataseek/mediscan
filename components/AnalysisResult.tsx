@@ -418,37 +418,40 @@ export function AnalysisResult({ result, previewUrl }: { result: AnalysisRespons
                     key={`${value.nombre}-${index}`}
                     className="flex flex-col gap-2 py-2.5 first:pt-0 last:pb-0"
                   >
-                    <div className="flex w-full min-w-0 flex-col gap-1.5 min-[380px]:flex-row min-[380px]:items-start min-[380px]:justify-between min-[380px]:gap-3">
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <p className="break-words text-base font-semibold leading-snug text-white">{value.nombre}</p>
-                        {showInlineValue ? (
-                          displayText ? (
-                            <p className="break-words text-base font-semibold leading-snug text-[#3dd4a5]">{displayText}</p>
-                          ) : (
-                            <p className="break-words text-base leading-snug text-[#8b95a8]">—</p>
-                          )
-                        ) : null}
+                    {/* Ancho completo primero: evita que flex-row comprima el título a una “columna” de una letra. */}
+                    <div className="w-full min-w-0 max-w-full space-y-1">
+                      <p className="text-pretty break-words text-base font-semibold leading-snug text-white">
+                        {value.nombre}
+                      </p>
+                      {showInlineValue ? (
+                        displayText ? (
+                          <p className="text-pretty break-words text-base font-semibold leading-snug text-[#3dd4a5]">
+                            {displayText}
+                          </p>
+                        ) : (
+                          <p className="text-pretty break-words text-base leading-snug text-[#8b95a8]">—</p>
+                        )
+                      ) : null}
+                    </div>
+                    <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} aria-hidden />
+                        <span
+                          className={`inline-flex max-w-full min-w-0 items-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-snug whitespace-normal sm:whitespace-nowrap ${state.badgeClassName}`}
+                        >
+                          {state.label}
+                        </span>
                       </div>
-                      <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-2 self-start min-[380px]:w-auto min-[380px]:justify-end min-[380px]:self-center">
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} aria-hidden />
-                          <span
-                            className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-none whitespace-nowrap ${state.badgeClassName}`}
-                          >
-                            {state.label}
-                          </span>
-                        </div>
-                        {isMedicationDoc && !showInlineValue ? (
-                          <Link
-                            href={`/medicamento?nombre=${encodeURIComponent(value.nombre)}&valor=${encodeURIComponent(
-                              value.valor ?? ""
-                            )}&explicacion=${encodeURIComponent(value.explicacion ?? "")}`}
-                            className="inline-flex shrink-0 items-center gap-1 text-[13px] font-extrabold text-[#3dd4a5] transition hover:text-[#6ef2c6] focus:outline-none focus:ring-4 focus:ring-medical/20"
-                          >
-                            Ver info <ArrowRightIcon className="h-4 w-4" />
-                          </Link>
-                        ) : null}
-                      </div>
+                      {isMedicationDoc && !showInlineValue ? (
+                        <Link
+                          href={`/medicamento?nombre=${encodeURIComponent(value.nombre)}&valor=${encodeURIComponent(
+                            value.valor ?? ""
+                          )}&explicacion=${encodeURIComponent(value.explicacion ?? "")}`}
+                          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-extrabold text-[#3dd4a5] transition hover:text-[#6ef2c6] focus:outline-none focus:ring-4 focus:ring-medical/20"
+                        >
+                          Ver info <ArrowRightIcon className="h-4 w-4" />
+                        </Link>
+                      ) : null}
                     </div>
                   </li>
                 );
