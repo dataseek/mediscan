@@ -121,6 +121,33 @@ function normalizeValueLabel(value: string) {
     .trim();
 }
 
+/** Campos de caja de medicamento donde el valor debe verse en la lista (sin ir a detalle). */
+function medicationFieldShowsInlineValue(normalizedNombre: string) {
+  if (!normalizedNombre) return false;
+  if (normalizedNombre.includes("nombre comercial") || normalizedNombre.includes("brand name") || normalizedNombre.includes("nome comercial")) {
+    return true;
+  }
+  if (
+    normalizedNombre.includes("principio activo") ||
+    normalizedNombre.includes("active ingredient") ||
+    normalizedNombre.includes("ingrediente ativo")
+  ) {
+    return true;
+  }
+  if (normalizedNombre.includes("concentracion") || normalizedNombre.includes("concentracao") || normalizedNombre.includes("strength")) {
+    return true;
+  }
+  if (
+    normalizedNombre.includes("indicacion de toma") ||
+    normalizedNombre.includes("indicacao de toma") ||
+    normalizedNombre.includes("dosing instruction") ||
+    normalizedNombre.includes("how to take")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function SpeakerIcon() {
   return (
     <svg aria-hidden="true" className="h-7 w-7" viewBox="0 0 24 24" fill="none">
@@ -370,48 +397,64 @@ export function AnalysisResult({ result, previewUrl }: { result: AnalysisRespons
           animationDelayMs={nextDelay()}
         >
           {result.valores.length > 0 ? (
+            <>
+              {isMedicationDoc && previewUrl ? (
+                <div className="mb-3 flex justify-center min-[380px]:justify-start">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.06] sm:h-[5.5rem] sm:w-[5.5rem]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+                  </div>
+                </div>
+              ) : null}
             <ul className="divide-y divide-white/[0.06]">
               {result.valores.slice(0, 6).map((value, index) => {
                 const state = valueState(value, t);
+                const normalizedNombre = normalizeValueLabel(value.nombre);
+                const showInlineValue = isMedicationDoc && medicationFieldShowsInlineValue(normalizedNombre);
+                const displayText = (value.valor ?? "").trim() || (value.explicacion ?? "").trim();
 
                 return (
                   <li
                     key={`${value.nombre}-${index}`}
-                    className="flex flex-col items-start gap-2 py-2.5 first:pt-0 last:pb-0 min-[380px]:flex-row min-[380px]:items-center"
+                    className="flex flex-col gap-2 py-2.5 first:pt-0 last:pb-0"
                   >
-                    {isMedicationDoc && previewUrl ? (
-                      <div className="mt-0.5 h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.06] min-[380px]:mt-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+                    <div className="flex w-full min-w-0 flex-col gap-1.5 min-[380px]:flex-row min-[380px]:items-start min-[380px]:justify-between min-[380px]:gap-3">
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <p className="break-words text-base font-semibold leading-snug text-white">{value.nombre}</p>
+                        {showInlineValue ? (
+                          displayText ? (
+                            <p className="break-words text-base font-semibold leading-snug text-[#3dd4a5]">{displayText}</p>
+                          ) : (
+                            <p className="break-words text-base leading-snug text-[#8b95a8]">—</p>
+                          )
+                        ) : null}
                       </div>
-                    ) : null}
-
-                    <span className="min-w-0 break-words text-base leading-snug text-[#d1d6df] min-[380px]:flex-1">
-                      {value.nombre}
-                    </span>
-
-                    <div className="flex w-full min-w-0 items-center justify-between gap-2 min-[380px]:w-auto min-[380px]:justify-end">
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} aria-hidden />
-                      <span
-                        className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-none whitespace-nowrap ${state.badgeClassName}`}
-                      >
-                        {state.label}
-                      </span>
-                      {isMedicationDoc ? (
-                        <Link
-                          href={`/medicamento?nombre=${encodeURIComponent(value.nombre)}&valor=${encodeURIComponent(
-                            value.valor ?? ""
-                          )}&explicacion=${encodeURIComponent(value.explicacion ?? "")}`}
-                          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-extrabold text-[#3dd4a5] transition hover:text-[#6ef2c6] focus:outline-none focus:ring-4 focus:ring-medical/20"
-                        >
-                          Ver info <ArrowRightIcon className="h-4 w-4" />
-                        </Link>
-                      ) : null}
+                      <div className="flex w-full min-w-0 shrink-0 items-center justify-between gap-2 self-start min-[380px]:w-auto min-[380px]:justify-end min-[380px]:self-center">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} aria-hidden />
+                          <span
+                            className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-none whitespace-nowrap ${state.badgeClassName}`}
+                          >
+                            {state.label}
+                          </span>
+                        </div>
+                        {isMedicationDoc && !showInlineValue ? (
+                          <Link
+                            href={`/medicamento?nombre=${encodeURIComponent(value.nombre)}&valor=${encodeURIComponent(
+                              value.valor ?? ""
+                            )}&explicacion=${encodeURIComponent(value.explicacion ?? "")}`}
+                            className="inline-flex shrink-0 items-center gap-1 text-[13px] font-extrabold text-[#3dd4a5] transition hover:text-[#6ef2c6] focus:outline-none focus:ring-4 focus:ring-medical/20"
+                          >
+                            Ver info <ArrowRightIcon className="h-4 w-4" />
+                          </Link>
+                        ) : null}
+                      </div>
                     </div>
                   </li>
                 );
               })}
             </ul>
+            </>
           ) : (
             <p>{t("result.noValues")}</p>
           )}
@@ -523,7 +566,7 @@ export function AnalysisResult({ result, previewUrl }: { result: AnalysisRespons
         </ul>
       </ResultCard>
 
-      {isPrescription ? <PrescriptionSupport medications={result.valores} /> : null}
+      {isPrescription || isMedicationDoc ? <PrescriptionSupport medications={result.valores} /> : null}
 
       <button
         type="button"
