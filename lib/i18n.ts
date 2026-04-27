@@ -71,3 +71,22 @@ export function detectPreferredLocale(input: string | null | undefined): Locale 
 
   return "es";
 }
+
+export function detectLocaleFromTimezone(timeZone: string | null | undefined): Locale | null {
+  if (!timeZone) {
+    return null;
+  }
+
+  const normalized = timeZone.toLowerCase();
+  const ptZones = ["america/sao_paulo", "america/fortaleza", "america/recife", "america/belem", "america/manaus", "america/cuiaba", "america/porto_velho"];
+  if (ptZones.includes(normalized)) {
+    return "pt";
+  }
+
+  const enZones = ["america/new_york", "america/chicago", "america/denver", "america/los_angeles", "america/phoenix"];
+  if (enZones.includes(normalized)) {
+    return "en";
+  }
+
+  return null;
+}

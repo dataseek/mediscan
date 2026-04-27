@@ -6,6 +6,7 @@ import {
   DEFAULT_LOCALE,
   LOCALE_STORAGE_KEY,
   detectPreferredLocale,
+  detectLocaleFromTimezone,
   getMessages,
   resolveLocale,
   t,
@@ -24,13 +25,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
 
   useEffect(() => {
-    const savedLocale = resolveLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
-    const nextLocale =
-      savedLocale !== DEFAULT_LOCALE
-        ? savedLocale
-        : detectPreferredLocale(window.navigator.language);
+    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    const hasStoredLocale = stored != null;
+    const savedLocale = resolveLocale(stored);
 
-    setLocaleState(nextLocale);
+    if (hasStoredLocale) {
+      setLocaleState(savedLocale);
+      return;
+    }
+
+    const navigatorLocale = detectPreferredLocale(window.navigator.language);
+    const timezoneLocale = detectLocaleFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    setLocaleState(timezoneLocale ?? navigatorLocale);
   }, []);
 
   useEffect(() => {

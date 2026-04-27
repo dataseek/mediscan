@@ -50,7 +50,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" data-theme="light">
+    <html lang="es" data-theme="dark">
       <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>

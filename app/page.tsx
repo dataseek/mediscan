@@ -18,6 +18,30 @@ function SpinnerIcon() {
   );
 }
 
+function AnalyzeIcon() {
+  return (
+    <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+      <path d="M4 18V6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M4 18h16" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <path d="M7.5 15v-3.8M12 15V9M16.5 15v-6.2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg aria-hidden="true" className="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 21s7-3.4 7-10.1V5.8L12 3 5 5.8v5.1C5 17.6 12 21 12 21Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M8.7 12.1h6.6M12 8.8v6.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function HomePage() {
   const { locale, t } = useLanguage();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -28,9 +52,75 @@ export default function HomePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
-    setResult(null);
-    setError(null);
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const storedPreview = window.sessionStorage.getItem("mediscan-last-preview");
+      const storedFileName = window.sessionStorage.getItem("mediscan-last-filename");
+      const storedLoadedAt = window.sessionStorage.getItem("mediscan-last-fileLoadedAtMs");
+      const storedResult = window.sessionStorage.getItem("mediscan-last-result");
+
+      if (storedPreview) {
+        setPreviewUrl(storedPreview);
+      }
+      if (storedFileName) {
+        setFileName(storedFileName);
+      }
+      if (storedLoadedAt) {
+        const parsed = Number(storedLoadedAt);
+        if (Number.isFinite(parsed) && parsed > 0) {
+          setFileLoadedAtMs(parsed);
+        }
+      }
+
+      if (storedResult) {
+        const parsed = JSON.parse(storedResult) as { locale?: string; result?: AnalysisResponse };
+        if (parsed?.locale === locale && parsed?.result) {
+          setResult(parsed.result);
+        }
+      }
+    } catch {
+      // ignore storage failures / invalid data
+    }
   }, [locale]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (previewUrl) {
+      window.sessionStorage.setItem("mediscan-last-preview", previewUrl);
+      if (fileName) {
+        window.sessionStorage.setItem("mediscan-last-filename", fileName);
+      }
+      if (fileLoadedAtMs) {
+        window.sessionStorage.setItem("mediscan-last-fileLoadedAtMs", String(fileLoadedAtMs));
+      }
+    } else {
+      window.sessionStorage.removeItem("mediscan-last-preview");
+      window.sessionStorage.removeItem("mediscan-last-filename");
+      window.sessionStorage.removeItem("mediscan-last-fileLoadedAtMs");
+    }
+  }, [fileLoadedAtMs, fileName, previewUrl]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      if (result) {
+        window.sessionStorage.setItem("mediscan-last-result", JSON.stringify({ locale, result }));
+      } else {
+        window.sessionStorage.removeItem("mediscan-last-result");
+      }
+    } catch {
+      // ignore storage failures
+    }
+  }, [locale, result]);
 
   const handleImageSelected = useCallback((dataUrl: string, selectedFileName: string, lastModified: number) => {
     setPreviewUrl(dataUrl);
@@ -46,6 +136,12 @@ export default function HomePage() {
     setFileLoadedAtMs(null);
     setResult(null);
     setError(null);
+    try {
+      window.sessionStorage.removeItem("mediscan-last-especialidad");
+      window.sessionStorage.removeItem("mediscan-last-result");
+    } catch {
+      // ignore storage failures
+    }
   }, []);
 
   const handleAnalyze = useCallback(async () => {
@@ -74,6 +170,11 @@ export default function HomePage() {
         throw new Error("error" in data ? data.error : t("home.analyzeFailed"));
       }
 
+      try {
+        window.sessionStorage.setItem("mediscan-last-especialidad", data.result.especialidad);
+      } catch {
+        // ignore storage failures (private mode / disabled storage)
+      }
       setResult(data.result);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t("home.analyzeFailed"));
@@ -83,11 +184,11 @@ export default function HomePage() {
   }, [locale, previewUrl, t]);
 
   return (
-    <main className="relative box-border mx-auto flex min-h-screen w-full max-w-none flex-col bg-ink pb-[max(6rem,env(safe-area-inset-bottom,0px))] pl-[max(0.9rem,env(safe-area-inset-left,0px))] pr-[max(0.9rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))] text-[var(--app-text)] antialiased sm:max-w-2xl sm:px-5 sm:pb-8 sm:pt-5 lg:max-w-4xl">
+    <main className="relative box-border mx-auto flex min-h-screen w-full max-w-none flex-col bg-ink pb-[max(6rem,env(safe-area-inset-bottom,0px))] pl-[max(0.9rem,env(safe-area-inset-left,0px))] pr-[max(0.9rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))] text-[var(--app-text)] antialiased sm:max-w-2xl sm:px-5 sm:pb-8 sm:pt-5 lg:max-w-5xl lg:px-8 xl:max-w-6xl">
       <Header />
 
       <div className="min-h-0 min-w-0 flex-1 space-y-4 sm:space-y-5 lg:space-y-6">
-        <div className="grid min-w-0 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-start">
+        <div className="min-w-0 space-y-4 sm:space-y-5 lg:space-y-6">
           <div className="min-w-0 space-y-4 sm:space-y-5">
             <ImageUploader
               previewUrl={previewUrl}
@@ -118,7 +219,10 @@ export default function HomePage() {
                     </span>
                   </>
                 ) : (
-                  t("home.analyzeStudy")
+                  <span className="inline-flex items-center gap-2.5">
+                    <AnalyzeIcon />
+                    {t("home.analyzeStudy")}
+                  </span>
                 )}
               </button>
             ) : null}
@@ -135,12 +239,13 @@ export default function HomePage() {
             {isAnalyzing ? <LoadingSkeleton /> : null}
           </div>
 
-          <div className="min-w-0">{result ? <AnalysisResult result={result} /> : null}</div>
+          <div className="min-w-0">{result ? <AnalysisResult result={result} previewUrl={previewUrl} /> : null}</div>
         </div>
+
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-none border-t border-[var(--app-border)] bg-[var(--app-card)] px-5 py-2.5 shadow-[0_-10px_30px_rgba(18,55,95,0.10)] sm:hidden">
         <div className="mx-auto grid max-w-md grid-cols-3 gap-2 text-center text-[12px] font-bold text-[var(--app-muted)]">
-          <a href="/" className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl text-[var(--app-primary)]">
+          <a href="/" className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl text-[var(--app-medical)]">
             <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none">
               <path d="M4 11.5 12 4l8 7.5v7a1.5 1.5 0 0 1-1.5 1.5H15v-5.5H9V20H5.5A1.5 1.5 0 0 1 4 18.5v-7Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
             </svg>
@@ -162,6 +267,13 @@ export default function HomePage() {
           </a>
         </div>
       </nav>
+
+      <section className="mt-4 flex min-w-0 gap-3 rounded-[1.35rem] border border-[var(--app-border-strong)] bg-[var(--app-card)] p-4 text-[13px] font-normal leading-relaxed text-[var(--app-text)] shadow-[var(--app-shadow)] sm:text-base">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+          <ShieldIcon />
+        </div>
+        <p className="min-w-0 self-center">{t("result.disclaimerBody")}</p>
+      </section>
     </main>
   );
 }

@@ -19,7 +19,7 @@
       }
     },
     "header": {
-      "claim": "Entende estudios y recetas medicas antes de la consulta",
+      "claim": "Entiende recetas médicas, medicamentos y estudios, explicados en tu idioma.",
       "login": "Ingresar",
       "myHistory": "Mi historial",
       "myAccount": "Mi cuenta",
@@ -28,16 +28,31 @@
       "settings": "Configuracion",
       "openMenu": "Abrir menu"
     },
+    "settingsPage": {
+      "title": "Configuracion",
+      "back": "Volver",
+      "familyPhoneLabel": "Telefono del familiar (WhatsApp)",
+      "familyPhonePlaceholder": "Ej: +5491122334455",
+      "familyPhoneExample": "Incluye codigo de pais. Sin espacios ni guiones.",
+      "familyPhoneHint": "Se usa para compartir el resultado por WhatsApp desde el final del analisis.",
+      "familyPhoneInvalid": "El telefono parece incompleto. Agrega codigo de pais y numero.",
+      "save": "Guardar"
+    },
+    "share": {
+      "button": "Compartir con un familiar",
+      "missingPhone": "Configura el telefono del familiar en Configuracion para poder compartir.",
+      "openSettings": "Ir a Configuracion"
+    },
     "home": {
       "selectStudyFirst": "Primero selecciona o fotografia un estudio.",
-      "analyzeStudy": "Analizar estudio",
+      "analyzeStudy": "Analizar",
       "analyzingStudy": "Analizando...",
       "analyzeFailed": "No pudimos analizar el estudio. Proba nuevamente con una imagen mas clara."
     },
     "howItWorks": {
       "title": "Como funciona MediScan",
-      "step1Title": "Fotografia tu estudio o receta",
-      "step1Body": "Analisis de sangre, radiografia, ecografia, receta medica o cualquier papel de salud.",
+      "step1Title": "Fotografia tu receta, medicamento o estudio",
+      "step1Body": "Analisis de sangre, radiografia, ecografia, receta, medicamento o cualquier papel de salud.",
       "step2Title": "La IA lo analiza en segundos",
       "step2Body": "Detecta que tipo de estudio es y explica cada valor en lenguaje claro.",
       "step3Title": "Recibis un resumen listo para tu consulta",
@@ -58,14 +73,16 @@
     "uploader": {
       "invalidFormat": "Subi una imagen o PDF en formato PNG, JPG, WebP, HEIC o PDF.",
       "tooLarge": "El archivo pesa demasiado. Proba con menos de 12 MB.",
+      "compressionFailed": "La foto es muy pesada para OCR. Proba sacar otra foto (mejor luz) o baja la calidad/MP de la camara para que pese menos de 1 MB.",
+      "compressionUnsupported": "Tu camara guardo la imagen en un formato que no podemos comprimir. Proba subirla desde galeria o cambia el formato de la camara a JPG/HEIC mas liviano.",
       "loadFailed": "No se pudo cargar el archivo.",
-      "takePhoto": "Escanear receta",
+      "takePhoto": "Escanear receta o medicamento",
       "uploadImage": "Subir analisis o PDF",
       "dropzoneTitle": "Arrastra una imagen aqui",
       "dropzoneActiveTitle": "Suelta la imagen",
       "dropzoneSubtitle": "En desktop puedes arrastrar una imagen. En mobile usa los botones para fotografiar o subir.",
       "dropzoneAriaLabel": "Zona para arrastrar una imagen desde desktop",
-      "loadedStudy": "Estudio cargado",
+      "loadedStudy": "Archivo cargado",
       "previewAlt": "Vista previa del estudio seleccionado",
       "pdfPreviewTitle": "PDF cargado",
       "pdfPreviewSubtitle": "Se analizara el contenido del PDF.",
@@ -96,7 +113,10 @@
         "normal": "Normal",
         "attention": "Atencion",
         "review": "Revisar",
-        "notEvident": "No evidente"
+        "notEvident": "No evidente",
+        "readable": "Se lee claro",
+        "confirm": "Confirmar con profesional",
+        "unreadable": "Ilegible o dudoso"
       },
       "urgentTitle": "Advertencia importante",
       "urgentBody": "Hay senales que podrian requerir atencion medica urgente. Si tienes sintomas intensos, busca ayuda ahora.",
@@ -111,7 +131,7 @@
       "meaningRegion": "Explicacion del estudio",
       "questionsTitle": "Preguntas para hacerle al medico",
       "disclaimerTitle": "Aviso importante",
-      "disclaimerBody": "MediScan no reemplaza la opinion de un profesional de la salud. Esta informacion es educativa y no constituye diagnostico medico.",
+      "disclaimerBody": "MediScan no sustituye al médico ni al farmacéutico. No valida recetas. Solo ayuda a leer, traducir y organizar la información para que el usuario consulte con un profesional.",
       "fallbacks": {
         "unknownValueName": "Valor sin identificar",
         "valueNotReported": "No informado",
@@ -123,7 +143,7 @@
           "Doctor/a, que significa este resultado en mi caso particular?",
           "Necesito repetir o complementar este estudio antes de decidir proximos pasos?"
         ],
-        "disclaimer": "Este analisis es informativo y no reemplaza la consulta medica profesional."
+        "disclaimer": "MediScan no sustituye al médico ni al farmacéutico. No valida recetas. Solo ayuda a leer, traducir y organizar la información para que el usuario consulte con un profesional."
       }
     },
     "loading": {
@@ -131,6 +151,8 @@
     },
     "accessibility": {
       "title": "Accesibilidad",
+      "largeTextLabel": "Texto grande",
+      "voiceModeLabel": "Lectura por voz",
       "textSizeAriaLabel": "Cambiar tamano del texto",
       "textNormal": "A",
       "textLarge": "A+",
@@ -177,7 +199,7 @@
       "malformedModelResponse": "La respuesta del modelo llego malformada. Proba nuevamente.",
       "invalidModelJson": "La respuesta del modelo no fue JSON valido. Proba de nuevo con una imagen mas nitida.",
       "connectionFailed": "No pudimos conectar con el servicio de analisis. Intenta nuevamente en unos minutos.",
-      "userPrompt": "Analyze this medical file. It may be an image or PDF containing a lab study, imaging report, or medical prescription. If it is a prescription, transcribe only what is readable, translate the explanation to the selected app language, and mark unclear medication names or doses as needing review.",
+      "userPrompt": "Analyze this medical file. It may be an image or PDF containing a lab study, imaging report, medical prescription, medication box, blister, bottle, label, or leaflet. If it is a prescription or medication, transcribe only what is readable, explain how it is taken only when visible instructions are present, translate the explanation to the selected app language, and mark unclear medication names, doses, frequencies, or durations as needing review.",
       "responseLanguageInstruction": "Respond in Spanish."
     }
   },
@@ -201,7 +223,7 @@
       }
     },
     "header": {
-      "claim": "Understand studies and prescriptions before your appointment",
+      "claim": "Understand prescriptions, medications, and studies, explained in your language.",
       "login": "Log in",
       "myHistory": "My history",
       "myAccount": "My account",
@@ -210,16 +232,31 @@
       "settings": "Settings",
       "openMenu": "Open menu"
     },
+    "settingsPage": {
+      "title": "Settings",
+      "back": "Back",
+      "familyPhoneLabel": "Family phone (WhatsApp)",
+      "familyPhonePlaceholder": "e.g. +14155552671",
+      "familyPhoneExample": "Include country code. No spaces or dashes.",
+      "familyPhoneHint": "Used to share results via WhatsApp at the end of the analysis.",
+      "familyPhoneInvalid": "That phone number seems incomplete. Add country code and number.",
+      "save": "Save"
+    },
+    "share": {
+      "button": "Share with family",
+      "missingPhone": "Set the family phone in Settings to share.",
+      "openSettings": "Go to Settings"
+    },
     "home": {
       "selectStudyFirst": "Select or photograph a study first.",
-      "analyzeStudy": "Analyze study",
+      "analyzeStudy": "Analyze",
       "analyzingStudy": "Analyzing...",
       "analyzeFailed": "We could not analyze the study. Try again with a clearer image."
     },
     "howItWorks": {
       "title": "How MediScan works",
-      "step1Title": "Photograph your study or prescription",
-      "step1Body": "Blood test, X-ray, ultrasound, medical prescription, or any health paper.",
+      "step1Title": "Photograph your prescription, medication, or study",
+      "step1Body": "Blood test, X-ray, ultrasound, prescription, medication, or any health paper.",
       "step2Title": "AI analyzes it in seconds",
       "step2Body": "It detects the study type and explains each value in plain language.",
       "step3Title": "Get a summary ready for your appointment",
@@ -240,14 +277,16 @@
     "uploader": {
       "invalidFormat": "Upload an image or PDF in PNG, JPG, WebP, HEIC, or PDF format.",
       "tooLarge": "The file is too large. Try one under 12 MB.",
+      "compressionFailed": "This photo is too large for OCR. Try taking another photo (better lighting) or lower your camera quality so it stays under 1 MB.",
+      "compressionUnsupported": "Your camera saved the photo in a format we can't compress. Try uploading from the gallery or change the camera format to JPG/WebP.",
       "loadFailed": "The file could not be loaded.",
-      "takePhoto": "Scan prescription",
+      "takePhoto": "Scan prescription or medication",
       "uploadImage": "Upload analysis or PDF",
       "dropzoneTitle": "Drag an image here",
       "dropzoneActiveTitle": "Drop the image",
       "dropzoneSubtitle": "On desktop you can drag an image. On mobile use the buttons to take or upload a photo.",
       "dropzoneAriaLabel": "Area to drag an image from desktop",
-      "loadedStudy": "Study loaded",
+      "loadedStudy": "File loaded",
       "previewAlt": "Preview of the selected study",
       "pdfPreviewTitle": "PDF loaded",
       "pdfPreviewSubtitle": "The PDF content will be analyzed.",
@@ -278,7 +317,10 @@
         "normal": "Normal",
         "attention": "Attention",
         "review": "Review",
-        "notEvident": "Not evident"
+        "notEvident": "Not evident",
+        "readable": "Clearly readable",
+        "confirm": "Confirm with a professional",
+        "unreadable": "Unclear / hard to read"
       },
       "urgentTitle": "Important warning",
       "urgentBody": "There are signs that may require urgent medical attention. If you have intense symptoms, seek help now.",
@@ -293,7 +335,7 @@
       "meaningRegion": "Study explanation",
       "questionsTitle": "Questions to ask your doctor",
       "disclaimerTitle": "Important notice",
-      "disclaimerBody": "MediScan does not replace the opinion of a healthcare professional. This information is educational and does not constitute a medical diagnosis.",
+      "disclaimerBody": "MediScan does not replace a doctor or pharmacist. It does not validate prescriptions. It only helps read, translate, and organize information so the user can consult a professional.",
       "fallbacks": {
         "unknownValueName": "Unidentified value",
         "valueNotReported": "Not reported",
@@ -305,7 +347,7 @@
           "Doctor, what does this result mean in my specific case?",
           "Do I need to repeat or complement this study before deciding next steps?"
         ],
-        "disclaimer": "This analysis is informative and does not replace professional medical advice."
+        "disclaimer": "MediScan does not replace a doctor or pharmacist. It does not validate prescriptions. It only helps read, translate, and organize information so the user can consult a professional."
       }
     },
     "loading": {
@@ -313,6 +355,8 @@
     },
     "accessibility": {
       "title": "Accessibility",
+      "largeTextLabel": "Large text",
+      "voiceModeLabel": "Voice mode",
       "textSizeAriaLabel": "Change text size",
       "textNormal": "A",
       "textLarge": "A+",
@@ -359,7 +403,7 @@
       "malformedModelResponse": "The model response was malformed. Please try again.",
       "invalidModelJson": "The model response was not valid JSON. Try again with a sharper image.",
       "connectionFailed": "We could not connect to the analysis service. Please try again in a few minutes.",
-      "userPrompt": "Analyze this medical file. It may be an image or PDF containing a lab study, imaging report, or medical prescription. If it is a prescription, transcribe only what is readable, translate the explanation to the selected app language, and mark unclear medication names or doses as needing review.",
+      "userPrompt": "Analyze this medical file. It may be an image or PDF containing a lab study, imaging report, medical prescription, medication box, blister, bottle, label, or leaflet. If it is a prescription or medication, transcribe only what is readable, explain how it is taken only when visible instructions are present, translate the explanation to the selected app language, and mark unclear medication names, doses, frequencies, or durations as needing review.",
       "responseLanguageInstruction": "Respond in English."
     }
   },
@@ -383,7 +427,7 @@
       }
     },
     "header": {
-      "claim": "Entenda exames e receitas medicas antes da consulta",
+      "claim": "Entenda receitas, medicamentos e exames, explicados no seu idioma.",
       "login": "Entrar",
       "myHistory": "Meu historico",
       "myAccount": "Minha conta",
@@ -392,16 +436,31 @@
       "settings": "Configuracao",
       "openMenu": "Abrir menu"
     },
+    "settingsPage": {
+      "title": "Configuracao",
+      "back": "Voltar",
+      "familyPhoneLabel": "Telefone do familiar (WhatsApp)",
+      "familyPhonePlaceholder": "Ex: +5511999999999",
+      "familyPhoneExample": "Inclua codigo do pais. Sem espacos nem hifens.",
+      "familyPhoneHint": "Usado para compartilhar o resultado via WhatsApp no final da analise.",
+      "familyPhoneInvalid": "O telefone parece incompleto. Adicione codigo do pais e numero.",
+      "save": "Salvar"
+    },
+    "share": {
+      "button": "Compartilhar com familiar",
+      "missingPhone": "Configure o telefone do familiar em Configuracao para compartilhar.",
+      "openSettings": "Ir para Configuracao"
+    },
     "home": {
       "selectStudyFirst": "Primeiro selecione ou fotografe um exame.",
-      "analyzeStudy": "Analisar exame",
+      "analyzeStudy": "Analisar",
       "analyzingStudy": "Analisando...",
       "analyzeFailed": "Nao foi possivel analisar o exame. Tente novamente com uma imagem mais nitida."
     },
     "howItWorks": {
       "title": "Como o MediScan funciona",
-      "step1Title": "Fotografe seu exame ou receita",
-      "step1Body": "Exame de sangue, radiografia, ultrassom, receita medica ou qualquer papel de saude.",
+      "step1Title": "Fotografe sua receita, medicamento ou exame",
+      "step1Body": "Exame de sangue, radiografia, ultrassom, receita, medicamento ou qualquer papel de saude.",
       "step2Title": "A IA analisa em segundos",
       "step2Body": "Detecta que tipo de exame e e explica cada valor em linguagem clara.",
       "step3Title": "Receba um resumo pronto para a consulta",
@@ -422,14 +481,16 @@
     "uploader": {
       "invalidFormat": "Envie uma imagem ou PDF em PNG, JPG, WebP, HEIC ou PDF.",
       "tooLarge": "O arquivo esta muito pesado. Tente com menos de 12 MB.",
+      "compressionFailed": "A foto esta grande demais para OCR. Tente tirar outra foto (melhor luz) ou reduza a qualidade da camera para ficar abaixo de 1 MB.",
+      "compressionUnsupported": "A camera salvou a imagem em um formato que nao conseguimos comprimir. Tente enviar pela galeria ou mude o formato da camera para JPG/WebP.",
       "loadFailed": "Nao foi possivel carregar o arquivo.",
-      "takePhoto": "Escanear receita",
+      "takePhoto": "Escanear receita ou medicamento",
       "uploadImage": "Enviar exame ou PDF",
       "dropzoneTitle": "Arraste uma imagem aqui",
       "dropzoneActiveTitle": "Solte a imagem",
       "dropzoneSubtitle": "No desktop voce pode arrastar uma imagem. No mobile use os botoes para fotografar ou enviar.",
       "dropzoneAriaLabel": "Area para arrastar uma imagem no desktop",
-      "loadedStudy": "Exame carregado",
+      "loadedStudy": "Arquivo carregado",
       "previewAlt": "Previa do exame selecionado",
       "pdfPreviewTitle": "PDF carregado",
       "pdfPreviewSubtitle": "O conteudo do PDF sera analisado.",
@@ -460,7 +521,10 @@
         "normal": "Normal",
         "attention": "Atencao",
         "review": "Revisar",
-        "notEvident": "Nao evidente"
+        "notEvident": "Nao evidente",
+        "readable": "Da para ler bem",
+        "confirm": "Confirmar com profissional",
+        "unreadable": "Ilegivel ou duvidoso"
       },
       "urgentTitle": "Aviso importante",
       "urgentBody": "Ha sinais que podem exigir atendimento medico urgente. Se voce tiver sintomas intensos, procure ajuda agora.",
@@ -475,7 +539,7 @@
       "meaningRegion": "Explicacao do exame",
       "questionsTitle": "Perguntas para fazer ao medico",
       "disclaimerTitle": "Aviso importante",
-      "disclaimerBody": "O MediScan nao substitui a opiniao de um profissional de saude. Esta informacao e educativa e nao constitui diagnostico medico.",
+      "disclaimerBody": "O MediScan não substitui o médico nem o farmacêutico. Não valida receitas. Apenas ajuda a ler, traduzir e organizar as informações para que o usuário consulte um profissional.",
       "fallbacks": {
         "unknownValueName": "Valor nao identificado",
         "valueNotReported": "Nao informado",
@@ -487,7 +551,7 @@
           "Doutor/a, o que esse resultado significa no meu caso especifico?",
           "Preciso repetir ou complementar este exame antes de decidir os proximos passos?"
         ],
-        "disclaimer": "Esta analise e informativa e nao substitui orientacao medica profissional."
+        "disclaimer": "O MediScan não substitui o médico nem o farmacêutico. Não valida receitas. Apenas ajuda a ler, traduzir e organizar as informações para que o usuário consulte um profissional."
       }
     },
     "loading": {
@@ -495,6 +559,8 @@
     },
     "accessibility": {
       "title": "Acessibilidade",
+      "largeTextLabel": "Texto grande",
+      "voiceModeLabel": "Modo voz",
       "textSizeAriaLabel": "Mudar tamanho do texto",
       "textNormal": "A",
       "textLarge": "A+",
@@ -541,7 +607,7 @@
       "malformedModelResponse": "A resposta do modelo chegou malformada. Tente novamente.",
       "invalidModelJson": "A resposta do modelo nao foi um JSON valido. Tente de novo com uma imagem mais nitida.",
       "connectionFailed": "Nao foi possivel conectar ao servico de analise. Tente novamente em alguns minutos.",
-      "userPrompt": "Analyze this medical file. It may be an image or PDF containing a lab study, imaging report, or medical prescription. If it is a prescription, transcribe only what is readable, translate the explanation to the selected app language, and mark unclear medication names or doses as needing review.",
+      "userPrompt": "Analyze this medical file. It may be an image or PDF containing a lab study, imaging report, medical prescription, medication box, blister, bottle, label, or leaflet. If it is a prescription or medication, transcribe only what is readable, explain how it is taken only when visible instructions are present, translate the explanation to the selected app language, and mark unclear medication names, doses, frequencies, or durations as needing review.",
       "responseLanguageInstruction": "Respond in Portuguese."
     }
   }

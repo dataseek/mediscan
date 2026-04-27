@@ -4,16 +4,20 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 type TextScale = "normal" | "large" | "xlarge";
 type ThemeMode = "light" | "dark";
+type VoiceMode = "on" | "off";
 
 interface AccessibilityContextValue {
   textScale: TextScale;
   setTextScale: (scale: TextScale) => void;
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+  voiceMode: VoiceMode;
+  setVoiceMode: (mode: VoiceMode) => void;
 }
 
 const TEXT_SCALE_STORAGE_KEY = "mediscan-text-scale";
 const THEME_MODE_STORAGE_KEY = "mediscan-theme-mode";
+const VOICE_MODE_STORAGE_KEY = "mediscan-voice-mode";
 const AccessibilityContext = createContext<AccessibilityContextValue | null>(null);
 const textZoomByScale: Record<TextScale, string> = {
   normal: "1",
@@ -29,13 +33,19 @@ function isThemeMode(value: string | null): value is ThemeMode {
   return value === "light" || value === "dark";
 }
 
+function isVoiceMode(value: string | null): value is VoiceMode {
+  return value === "on" || value === "off";
+}
+
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
   const [textScale, setTextScaleState] = useState<TextScale>("normal");
-  const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
+  const [themeMode, setThemeModeState] = useState<ThemeMode>("dark");
+  const [voiceMode, setVoiceModeState] = useState<VoiceMode>("on");
 
   useEffect(() => {
     const savedScale = window.localStorage.getItem(TEXT_SCALE_STORAGE_KEY);
     const savedTheme = window.localStorage.getItem(THEME_MODE_STORAGE_KEY);
+    const savedVoice = window.localStorage.getItem(VOICE_MODE_STORAGE_KEY);
 
     if (isTextScale(savedScale)) {
       setTextScaleState(savedScale);
@@ -43,6 +53,10 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
     if (isThemeMode(savedTheme)) {
       setThemeModeState(savedTheme);
+    }
+
+    if (isVoiceMode(savedVoice)) {
+      setVoiceModeState(savedVoice);
     }
   }, []);
 
@@ -57,6 +71,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     window.localStorage.setItem(THEME_MODE_STORAGE_KEY, themeMode);
   }, [themeMode]);
 
+  useEffect(() => {
+    document.documentElement.dataset.voice = voiceMode;
+    window.localStorage.setItem(VOICE_MODE_STORAGE_KEY, voiceMode);
+  }, [voiceMode]);
+
   const setTextScale = useCallback((scale: TextScale) => {
     setTextScaleState(scale);
   }, []);
@@ -65,14 +84,20 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     setThemeModeState(mode);
   }, []);
 
+  const setVoiceMode = useCallback((mode: VoiceMode) => {
+    setVoiceModeState(mode);
+  }, []);
+
   const value = useMemo(
     () => ({
       textScale,
       setTextScale,
       themeMode,
-      setThemeMode
+      setThemeMode,
+      voiceMode,
+      setVoiceMode
     }),
-    [setTextScale, setThemeMode, textScale, themeMode]
+    [setTextScale, setThemeMode, setVoiceMode, textScale, themeMode, voiceMode]
   );
 
   return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 export const runtime = "edge";
 
+type Locale = "es" | "en" | "pt";
+
 interface PharmacyResult {
   id: string;
   name: string;
@@ -49,12 +51,32 @@ function isOpen24Hours(openingHours: string | null, periods?: Array<{ open?: { d
   );
 }
 
-async function getGooglePharmacies(lat: number, lon: number, apiKey: string): Promise<PharmacyResult[]> {
+function googleLanguage(locale: Locale) {
+  if (locale === "pt") return "pt-BR";
+  if (locale === "en") return "en";
+  return "es-419";
+}
+
+function localizeOsmOpeningHours(openingHours: string | null, locale: Locale) {
+  if (!openingHours) return openingHours;
+
+  const replacements: Record<string, Record<string, string>> = {
+    es: { Mo: "Lu", Tu: "Ma", We: "Mi", Th: "Ju", Fr: "Vi", Sa: "Sá", Su: "Do" },
+    en: { Mo: "Mon", Tu: "Tue", We: "Wed", Th: "Thu", Fr: "Fri", Sa: "Sat", Su: "Sun" },
+    pt: { Mo: "Seg", Tu: "Ter", We: "Qua", Th: "Qui", Fr: "Sex", Sa: "Sáb", Su: "Dom" }
+  };
+
+  const map = replacements[locale] ?? replacements.es;
+  return Object.entries(map).reduce((current, [from, to]) => current.replace(new RegExp(`\\b${from}\\b`, "g"), to), openingHours);
+}
+
+async function getGooglePharmacies(lat: number, lon: number, apiKey: string, locale: Locale): Promise<PharmacyResult[]> {
   const nearbyUrl = new URL("https://maps.googleapis.com/maps/api/place/nearbysearch/json");
   nearbyUrl.searchParams.set("location", `${lat},${lon}`);
   nearbyUrl.searchParams.set("radius", "5000");
   nearbyUrl.searchParams.set("type", "pharmacy");
   nearbyUrl.searchParams.set("key", apiKey);
+  nearbyUrl.searchParams.set("language", googleLanguage(locale));
 
   const nearbyResponse = await fetch(nearbyUrl);
   const nearbyData = (await nearbyResponse.json()) as {
@@ -72,7 +94,7 @@ async function getGooglePharmacies(lat: number, lon: number, apiKey: string): Pr
   }
 
   const details: Array<PharmacyResult | null> = await Promise.all(
-    nearbyData.results.slice(0, 5).map(async (place) => {
+    nearbyData.results.slice(0, 3).map(async (place) => {
       if (!place.place_id) {
         return null;
       }
@@ -81,6 +103,7 @@ async function getGooglePharmacies(lat: number, lon: number, apiKey: string): Pr
       detailsUrl.searchParams.set("place_id", place.place_id);
       detailsUrl.searchParams.set("fields", "name,formatted_address,geometry,opening_hours,url,place_id");
       detailsUrl.searchParams.set("key", apiKey);
+      detailsUrl.searchParams.set("language", googleLanguage(locale));
 
       const detailsResponse = await fetch(detailsUrl);
       const detailsData = (await detailsResponse.json()) as {
@@ -128,7 +151,7 @@ async function getGooglePharmacies(lat: number, lon: number, apiKey: string): Pr
   return details.filter((item): item is PharmacyResult => item !== null).sort((a, b) => a.distanceKm - b.distanceKm);
 }
 
-async function getOsmPharmacies(lat: number, lon: number): Promise<PharmacyResult[]> {
+async function getOsmPharmacies(lat: number, lon: number, locale: Locale): Promise<PharmacyResult[]> {
   const query = `
     [out:json][timeout:15];
     (
@@ -165,7 +188,7 @@ async function getOsmPharmacies(lat: number, lon: number): Promise<PharmacyResul
       }
 
       const address = [item.tags?.["addr:street"], item.tags?.["addr:housenumber"]].filter(Boolean).join(" ") || null;
-      const openingHours = item.tags?.opening_hours?.trim() || null;
+      const openingHours = localizeOsmOpeningHours(item.tags?.opening_hours?.trim() || null, locale);
 
       return {
         id: `${item.type ?? "osm"}-${item.id}`,
@@ -185,13 +208,15 @@ async function getOsmPharmacies(lat: number, lon: number): Promise<PharmacyResul
   return pharmacies
     .filter((item): item is PharmacyResult => item !== null)
     .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, 5);
+    .slice(0, 3);
 }
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const lat = Number(url.searchParams.get("lat"));
   const lon = Number(url.searchParams.get("lon"));
+  const langParam = url.searchParams.get("lang");
+  const locale: Locale = langParam === "en" || langParam === "pt" || langParam === "es" ? langParam : "es";
 
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
     return NextResponse.json({ error: "Invalid location" }, { status: 400 });
@@ -200,16 +225,16 @@ export async function GET(request: Request) {
   const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   try {
-    const pharmacies = googleApiKey ? await getGooglePharmacies(lat, lon, googleApiKey) : [];
+    const pharmacies = googleApiKey ? await getGooglePharmacies(lat, lon, googleApiKey, locale) : [];
 
     if (pharmacies.length > 0) {
       return NextResponse.json({ pharmacies, source: "google" });
     }
 
-    return NextResponse.json({ pharmacies: await getOsmPharmacies(lat, lon), source: "osm" });
+    return NextResponse.json({ pharmacies: await getOsmPharmacies(lat, lon, locale), source: "osm" });
   } catch {
     try {
-      return NextResponse.json({ pharmacies: await getOsmPharmacies(lat, lon), source: "osm" });
+      return NextResponse.json({ pharmacies: await getOsmPharmacies(lat, lon, locale), source: "osm" });
     } catch {
       return NextResponse.json({ error: "Lookup failed" }, { status: 502 });
     }

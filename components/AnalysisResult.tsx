@@ -1,11 +1,37 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useAccessibility } from "@/components/AccessibilityProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { MediScanLogoMark } from "@/components/MediScanLogoMark";
 import { PrescriptionSupport } from "@/components/PrescriptionSupport";
 import type { AnalysisResponse, MedicalValue } from "@/lib/types";
 import { splitExplanationIntoParagraphs } from "@/lib/utils";
+
+const FAMILY_PHONE_STORAGE_KEY = "mediscan-family-phone";
+
+function preferredSpeechLang(locale: string) {
+  if (locale === "pt") return "pt-BR";
+  if (locale === "en") return "en-US";
+  return "es-AR";
+}
+
+function pickVoice(lang: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return undefined;
+  }
+
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices?.length) return undefined;
+
+  const normalized = lang.toLowerCase();
+  const exact = voices.find((voice) => voice.lang?.toLowerCase() === normalized);
+  if (exact) return exact;
+
+  const prefix = normalized.split("-")[0];
+  return voices.find((voice) => voice.lang?.toLowerCase().startsWith(`${prefix}-`));
+}
 
 function ChevronIcon() {
   return (
@@ -54,11 +80,60 @@ function StethoscopeIcon() {
   );
 }
 
+function PillIcon() {
+  return (
+    <svg aria-hidden="true" className="h-7 w-7" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M9 3.8h6"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 7.2c0-1.2 1-2.2 2.2-2.2h3.6c1.2 0 2.2 1 2.2 2.2v12c0 1.3-1 2.3-2.3 2.3h-3.4c-1.3 0-2.3-1-2.3-2.3v-12Z"
+        stroke="currentColor"
+        strokeWidth="1.65"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.4 11.2h5.2"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 8.6v5.2"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function normalizeValueLabel(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function SpeakerIcon() {
   return (
-    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" className="h-7 w-7" viewBox="0 0 24 24" fill="none">
       <path d="M4 10v4h3l5 4V6l-5 4H4Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
       <path d="M16 9.2a4 4 0 0 1 0 5.6M18.5 6.8a7.5 7.5 0 0 1 0 10.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none">
+      <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -105,7 +180,7 @@ function ResultCard({
         {prose ? (
           children
         ) : (
-          <div className="min-w-0 break-words text-[15px] leading-relaxed text-[var(--app-muted)] sm:text-base sm:leading-relaxed">
+          <div className="min-w-0 break-words text-base leading-relaxed text-[var(--app-muted)]">
             {children}
           </div>
         )}
@@ -116,22 +191,37 @@ function ResultCard({
 
 function valueState(value: MedicalValue, translate: (path: string) => string) {
   if (value.estado === "normal") {
-    return { dot: "bg-[#22c58a]", label: translate("result.status.normal") };
+    return {
+      dot: "bg-[#22c58a]",
+      label: translate("result.status.readable"),
+      badgeClassName: "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-300/20"
+    };
   }
 
   if (value.estado === "atencion") {
-    return { dot: "bg-[#e8c547]", label: value.valor || translate("result.status.notEvident") };
+    return {
+      dot: "bg-[#e8c547]",
+      label: translate("result.status.confirm"),
+      badgeClassName: "bg-amber-400/15 text-amber-100 ring-1 ring-amber-300/20"
+    };
   }
 
-  return { dot: "bg-[#ff5d5d]", label: translate("result.status.review") };
+  return {
+    dot: "bg-[#ff5d5d]",
+    label: translate("result.status.unreadable"),
+    badgeClassName: "bg-red-500/15 text-red-100 ring-1 ring-red-300/20"
+  };
 }
 
-export function AnalysisResult({ result }: { result: AnalysisResponse }) {
+export function AnalysisResult({ result, previewUrl }: { result: AnalysisResponse; previewUrl: string | null }) {
   const { locale, t } = useLanguage();
+  const { voiceMode } = useAccessibility();
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [familyPhone, setFamilyPhone] = useState<string | null>(null);
   const explanationParts = splitExplanationIntoParagraphs(result.explicacion_general);
   const explanationBlocks = explanationParts.length > 0 ? explanationParts : [result.explicacion_general];
   const isPrescription = result.especialidad === "RECETA_MEDICA";
+  const isMedicationDoc = result.especialidad === "MEDICAMENTO";
   let cardIndex = 0;
   const nextDelay = () => 60 + cardIndex++ * 90;
   const speechText = useMemo(() => {
@@ -170,7 +260,12 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
     }
 
     const utterance = new SpeechSynthesisUtterance(speechText);
-    utterance.lang = locale === "pt" ? "pt-BR" : locale === "en" ? "en-US" : "es-AR";
+    const speechLang = preferredSpeechLang(locale);
+    utterance.lang = speechLang;
+    const voice = pickVoice(speechLang);
+    if (voice) {
+      utterance.voice = voice;
+    }
     utterance.rate = 0.92;
     utterance.pitch = 1;
     utterance.onend = () => setIsSpeaking(false);
@@ -181,31 +276,85 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
   }, [locale, speechText]);
 
   useEffect(() => {
+    if (voiceMode === "off" && typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     };
+  }, [voiceMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(FAMILY_PHONE_STORAGE_KEY);
+      setFamilyPhone(stored ? stored.trim() : null);
+    } catch {
+      setFamilyPhone(null);
+    }
   }, []);
+
+  const shareText = useMemo(() => {
+    const lines: string[] = [];
+    lines.push("MediScan — resumen para revisar con un profesional.");
+    if (result.tipo_estudio) lines.push(`Documento: ${result.tipo_estudio}`);
+    if (result.resumen) lines.push(`Resumen: ${result.resumen}`);
+    const values = result.valores?.slice(0, 6) ?? [];
+    if (values.length > 0) {
+      lines.push("Datos/valores:");
+      for (const item of values) {
+        const parts = [item.nombre, item.valor].filter(Boolean).join(": ");
+        lines.push(`- ${parts}`);
+      }
+    }
+    const questions = result.preguntas_medico?.slice(0, 5) ?? [];
+    if (questions.length > 0) {
+      lines.push("Preguntas sugeridas:");
+      for (const q of questions) lines.push(`- ${q}`);
+    }
+    if (result.disclaimer) lines.push(result.disclaimer);
+    return lines.join("\n");
+  }, [result]);
+
+  const handleShare = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    if (!familyPhone) {
+      window.location.href = "/configuracion";
+      return;
+    }
+
+    const phoneDigits = familyPhone.replace(/[^\d]/g, "");
+    const encoded = encodeURIComponent(shareText);
+    const whatsappUrl = `https://wa.me/${phoneDigits}?text=${encoded}`;
+
+    window.open(whatsappUrl, "_blank", "noreferrer");
+  }, [familyPhone, shareText]);
 
   return (
     <section className="min-w-0 space-y-3.5 sm:space-y-4" aria-live="polite">
-      <button
-        type="button"
-        className="flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card-muted)] px-4 text-[17px] font-bold text-[var(--app-text-strong)] transition hover:bg-[var(--app-card-soft)] focus:outline-none focus:ring-4 focus:ring-medical/25"
-        onClick={handleSpeak}
-      >
-        <SpeakerIcon />
-        {isSpeaking ? t("accessibility.stopReading") : t("accessibility.readResult")}
-      </button>
+      {voiceMode === "on" ? (
+        <button
+          type="button"
+          className="flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card-muted)] px-4 text-[17px] font-bold text-[var(--app-text-strong)] transition hover:bg-[var(--app-card-soft)] focus:outline-none focus:ring-4 focus:ring-medical/25"
+          onClick={handleSpeak}
+        >
+          <SpeakerIcon />
+          {isSpeaking ? t("accessibility.stopReading") : t("accessibility.readResult")}
+        </button>
+      ) : null}
 
       {result.urgencia === "urgente" ? (
         <div
           className="min-w-0 max-w-full rounded-2xl border border-red-400/35 bg-red-500/12 p-4 text-red-100 animate-fadeIn [will-change:transform,opacity]"
           style={{ animationDelay: "0ms" }}
         >
-          <p className="break-words text-[14px] font-semibold min-[380px]:text-[15px] sm:text-base">{t("result.urgentTitle")}</p>
-          <p className="mt-1.5 break-words text-[12px] leading-relaxed min-[380px]:text-[13px] sm:text-sm">{t("result.urgentBody")}</p>
+          <p className="break-words text-base font-semibold">{t("result.urgentTitle")}</p>
+          <p className="mt-1.5 break-words text-base leading-relaxed">{t("result.urgentBody")}</p>
         </div>
       ) : null}
 
@@ -226,14 +375,39 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
                 const state = valueState(value, t);
 
                 return (
-                  <li key={`${value.nombre}-${index}`} className="flex items-start gap-1.5 py-2.5 first:pt-0 last:pb-0 min-[380px]:items-center min-[380px]:gap-2">
-                    <span className="min-w-0 flex-1 break-words text-[12px] leading-snug text-[#d1d6df] min-[380px]:text-[13px] sm:text-[14px]">
+                  <li
+                    key={`${value.nombre}-${index}`}
+                    className="flex flex-col items-start gap-2 py-2.5 first:pt-0 last:pb-0 min-[380px]:flex-row min-[380px]:items-center"
+                  >
+                    {isMedicationDoc && previewUrl ? (
+                      <div className="mt-0.5 h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.06] min-[380px]:mt-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+                      </div>
+                    ) : null}
+
+                    <span className="min-w-0 break-words text-base leading-snug text-[#d1d6df] min-[380px]:flex-1">
                       {value.nombre}
                     </span>
-                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full min-[380px]:mt-0 ${state.dot}`} aria-hidden />
-                    <span className="w-[4.75rem] shrink-0 pt-0.5 text-right text-[11px] leading-snug text-[#b4bcc9] min-[380px]:w-[5.5rem] min-[380px]:pt-0 min-[380px]:text-[12px] sm:w-[92px] sm:text-[13px]">
-                      {state.label}
-                    </span>
+
+                    <div className="flex w-full min-w-0 items-center justify-between gap-2 min-[380px]:w-auto min-[380px]:justify-end">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} aria-hidden />
+                      <span
+                        className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-none whitespace-nowrap ${state.badgeClassName}`}
+                      >
+                        {state.label}
+                      </span>
+                      {isMedicationDoc ? (
+                        <Link
+                          href={`/medicamento?nombre=${encodeURIComponent(value.nombre)}&valor=${encodeURIComponent(
+                            value.valor ?? ""
+                          )}&explicacion=${encodeURIComponent(value.explicacion ?? "")}`}
+                          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-extrabold text-[#3dd4a5] transition hover:text-[#6ef2c6] focus:outline-none focus:ring-4 focus:ring-medical/20"
+                        >
+                          Ver info <ArrowRightIcon className="h-4 w-4" />
+                        </Link>
+                      ) : null}
+                    </div>
                   </li>
                 );
               })}
@@ -257,33 +431,57 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
               <ul className="space-y-2.5">
                 {result.valores.slice(0, 6).map((value, index) => {
                   const state = valueState(value, t);
+                  const normalizedLabel = normalizeValueLabel(value.nombre);
+                  const showMedicationDetailLink =
+                    normalizedLabel !== "indicacion de toma" &&
+                    normalizedLabel !== "indicaciones de toma" &&
+                    normalizedLabel !== "profesional que prescribe";
 
                   return (
                     <li key={`${value.nombre}-${index}`} className="rounded-xl border border-white/[0.06] bg-[#0a121c]/85 p-3">
                       <div className="flex min-w-0 items-start justify-between gap-2">
-                        <p className="min-w-0 break-words text-[14px] font-semibold leading-snug text-white">{value.nombre}</p>
-                        <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-1 text-[11px] font-semibold text-[#c4ccd8]">
+                        <div className="flex min-w-0 items-start gap-3">
+                          {showMedicationDetailLink ? (
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.06] text-white/70">
+                              <PillIcon />
+                            </div>
+                          ) : null}
+                          <div className="min-w-0">
+                            <p className="min-w-0 break-words text-base font-semibold leading-snug text-white">{value.nombre}</p>
+                            {showMedicationDetailLink ? (
+                              <Link
+                                href={`/medicamento?nombre=${encodeURIComponent(value.nombre)}&valor=${encodeURIComponent(
+                                  value.valor ?? ""
+                                )}&explicacion=${encodeURIComponent(value.explicacion ?? "")}`}
+                                className="mt-2 inline-flex items-center gap-1 text-[13px] font-extrabold text-[#3dd4a5] transition hover:text-[#6ef2c6] focus:outline-none focus:ring-4 focus:ring-medical/20"
+                              >
+                                Ver info <ArrowRightIcon className="h-4 w-4" />
+                              </Link>
+                            ) : null}
+                          </div>
+                        </div>
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-base font-semibold leading-none ${state.badgeClassName}`}>
                           {state.label}
                         </span>
                       </div>
                       {value.valor ? (
-                        <p className="mt-2 break-words text-[13px] font-semibold leading-snug text-[#3dd4a5]">
+                        <p className="mt-2 break-words text-base font-semibold leading-snug text-[#3dd4a5]">
                           {value.valor}
                         </p>
                       ) : null}
-                      <p className="mt-2 break-words text-[13px] leading-relaxed text-[#b4bcc9] sm:text-[14px]">
+                      <p className="mt-2 break-words text-base leading-relaxed text-[#b4bcc9]">
                         {value.explicacion}
                       </p>
                     </li>
                   );
                 })}
               </ul>
-              <p className="rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-[13px] font-semibold leading-relaxed text-amber-100 sm:text-[14px]">
+              <p className="rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-base font-semibold leading-relaxed text-amber-100">
                 {t("result.prescriptionVerifyDoctor")}
               </p>
             </div>
           ) : (
-            <p className="text-[13px] leading-relaxed text-[#b4bcc9] sm:text-[14px]">{t("result.noPrescriptionValues")}</p>
+            <p className="text-base leading-relaxed text-[#b4bcc9]">{t("result.noPrescriptionValues")}</p>
           )}
         </ResultCard>
       ) : null}
@@ -301,7 +499,7 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
             {explanationBlocks.map((paragraph, index) => (
               <p
                 key={index}
-                className="hyphens-auto text-pretty text-[13px] font-normal leading-[1.68] tracking-[0.01em] text-[#dce3ec] min-[380px]:text-[14px] min-[380px]:leading-[1.72] sm:text-[15px] sm:leading-[1.75]"
+                className="hyphens-auto text-pretty text-base font-normal leading-[1.75] tracking-[0.01em] text-[#dce3ec]"
               >
                 {paragraph}
               </p>
@@ -318,34 +516,22 @@ export function AnalysisResult({ result }: { result: AnalysisResponse }) {
       >
         <ul className="list-disc space-y-1.5 pl-[1.1rem] marker:text-[#8b95a8]">
           {result.preguntas_medico.slice(0, 5).map((question, index) => (
-            <li key={`${question}-${index}`} className="pl-0.5 text-[13px] leading-snug sm:text-[14px]">
+            <li key={`${question}-${index}`} className="pl-0.5 text-base leading-snug">
               {question}
             </li>
           ))}
         </ul>
       </ResultCard>
 
-      {isPrescription && result.valores.length > 0 ? <PrescriptionSupport medications={result.valores} /> : null}
+      {isPrescription ? <PrescriptionSupport medications={result.valores} /> : null}
 
-      <article
-        className={`${resultCardArticleClass} border-dotted border-[rgba(255,93,93,1)] animate-fadeIn [will-change:transform,opacity]`}
-        style={{ animationDelay: `${nextDelay()}ms` }}
+      <button
+        type="button"
+        onClick={handleShare}
+        className="flex min-h-[58px] w-full items-center justify-center gap-2.5 rounded-[1.35rem] bg-medical px-4 text-[16px] font-extrabold text-white shadow-lg shadow-black/20 transition hover:bg-medicalHover focus:outline-none focus:ring-4 focus:ring-medical/25 active:scale-[0.99]"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] min-[380px]:h-12 min-[380px]:w-12 sm:h-[52px] sm:w-[52px]">
-          <MediScanLogoMark className="h-7 w-7 text-medical sm:h-8 sm:w-8" />
-        </div>
-        <div className="min-w-0 self-center pt-0.5">
-          <p className="text-[15px] font-semibold leading-tight text-white sm:text-base">{t("result.disclaimerTitle")}</p>
-        </div>
-        <div className="flex h-10 items-center justify-end self-center pt-0.5 min-[380px]:h-12 sm:h-[52px]">
-          <ChevronIcon />
-        </div>
-        <div className="col-span-3 mt-0.5 min-w-0 min-[380px]:mt-1 sm:mt-1.5">
-          <p className="text-[15px] font-medium leading-relaxed text-[#c4ccd8] sm:text-base">
-            {result.disclaimer || t("result.disclaimerBody")}
-          </p>
-        </div>
-      </article>
+        {t("share.button")} <ArrowRightIcon className="h-4 w-4" />
+      </button>
     </section>
   );
 }

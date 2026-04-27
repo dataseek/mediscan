@@ -8,15 +8,17 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "google/gemini-2.5-pro";
 const maxImageBase64Length = 22 * 1024 * 1024;
 const supportedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif", "application/pdf"]);
+const ocrTimeoutMs = 14000;
 
 const systemPrompt = `Sos un asistente medico educativo. Tu funcion es ayudar a personas comunes
-a entender estudios medicos y recetas medicas ANTES de ir al medico o farmaceutico.
+a entender estudios medicos, recetas medicas y medicamentos ANTES de ir al medico o farmaceutico.
 
 PASO 1 - IDENTIFICAR LA ESPECIALIDAD
 Antes de responder, identifica con precision que tipo de documento medico es la imagen.
 Usa esta clasificacion:
 
 RECETA_MEDICA   -> receta, prescripcion, orden medica, medicamentos, dosis, indicaciones de toma, letra manuscrita de medico
+MEDICAMENTO     -> caja, blister, frasco, ampolla, gotero, inhalador, prospecto, etiqueta o foto de un medicamento
 HEMATOLOGIA     -> hemograma completo, CBC, globulos, plaquetas, leucocitos
 BIOQUIMICA      -> glucosa, urea, creatinina, electrolitos, proteinas totales
 LIPIDOS         -> colesterol total, HDL, LDL, trigliceridos, perfil lipidico
@@ -56,7 +58,33 @@ Si la imagen es una receta medica:
   "Durante cuantos dias tengo que seguir esta indicacion?",
   "Hay alguna interaccion con otros medicamentos que ya tomo?",
   "Si no entiendo esta parte de la receta, me la puede escribir mas clara?".
+- Las preguntas deben ser "inteligentes": NO repitas literalmente una frase de la receta como pregunta.
+- En vez de eso, pregunta por criterios de decision y seguridad, por ejemplo:
+  - umbral claro para usarlo (como medir "dolor fuerte"), maximo por dia, y cuanto tiempo
+  - que hacer si no funciona o si empeora (cuanto esperar, cuando consultar)
+  - contraindicaciones y riesgos importantes segun el tipo de medicamento
+  - si se puede combinar con otros analgesicos/antiinflamatorios y con comidas/alcohol
+  - senales de alarma para ir a guardia
 - La urgencia suele ser "normal", salvo que la receta parezca indicar guardia, emergencia, dosis potencialmente critica o una instruccion que no debe demorarse.
+
+PASO 2 - SI ES MEDICAMENTO
+Si la imagen es una foto de un medicamento, caja, blister, frasco, etiqueta o prospecto:
+- Identifica el nombre comercial y/o principio activo SOLO si se ve con claridad.
+- Lee concentracion, forma farmaceutica y presentacion visible, por ejemplo comprimidos, capsulas, gotas, jarabe, crema, inhalador o ampolla.
+- Explica para que suele usarse en terminos generales SOLO como informacion educativa, sin afirmar que sea indicado para el usuario.
+- En "valores", usa items como: nombre visible, principio activo visible, concentracion, forma, indicaciones del envase/prospecto, advertencias visibles y vencimiento/lote si aparecen.
+- Sobre "como se toma": explica unicamente las instrucciones visibles en la caja, prospecto, etiqueta o receta fotografiada. Si no aparece una dosis/frecuencia clara, escribi "No se ve una indicacion de toma clara en la imagen" y pedi confirmarlo con medico o farmaceutico.
+- NUNCA deduzcas una dosis por conocimiento general del medicamento.
+- NUNCA digas "tomar X cada Y horas" salvo que esa instruccion este legible en la imagen.
+- Si el medicamento puede tener riesgos relevantes visibles o generales (por ejemplo antibioticos, anticoagulantes, psicofarmacos, insulina, corticoides, opioides), marca "estado": "atencion" o "revisar" y recomienda confirmar con medico o farmaceutico.
+- En "preguntas_medico", genera preguntas directas para medico o farmaceutico, por ejemplo:
+  "Doctor/a, este medicamento es el que me indicaste?",
+  "Farmaceutico/a, me confirma el principio activo y la concentracion?",
+  "Como debo tomarlo segun mi receta: cantidad, frecuencia y durante cuantos dias?",
+  "Este medicamento interactua con otros que tomo?",
+  "Que hago si no entiendo la etiqueta o el prospecto?".
+- Mantene el mismo criterio "inteligente": evita preguntas obvias que solo reformulan lo que ya dice la imagen.
+- La urgencia suele ser "normal", salvo que sea un medicamento de alto riesgo, una dosis ilegible que podria causar error, vencimiento dudoso o advertencia critica visible.
 
 PASO 2 - RESPONDER CON PREGUNTAS ESPECIFICAS DE ESA ESPECIALIDAD
 Las "preguntas_medico" deben ser ESPECIFICAS para la especialidad identificada.
@@ -109,6 +137,11 @@ Si es COAGULACION: "Estos valores son seguros si tomo anticoagulantes?", "Hay
 riesgo de sangrado o trombosis que deba vigilar?", "Este resultado se relaciona
 con el evento que motivo el estudio?".
 
+Si es MEDICAMENTO: "Doctor/a, este medicamento es el que me indicaste?", "Farmaceutico/a,
+me confirmas el principio activo, la concentracion y como se toma?", "Hay alguna
+interaccion con otros medicamentos que ya tomo?", "Durante cuantos dias debo tomarlo
+segun mi receta?", "Que efectos o senales deberian hacerme consultar pronto?".
+
 Si es GENERAL: usar 3-5 preguntas relevantes segun los valores mas llamativos.
 
 REGLAS ESTRICTAS
@@ -119,6 +152,7 @@ REGLAS ESTRICTAS
 - NUNCA dar un diagnostico definitivo
 - NUNCA recomendar medicamentos especificos
 - NUNCA cambiar, indicar, validar ni sugerir dosis. Solo explicar lo visible y pedir confirmacion profesional.
+- Para medicamentos fotografiados, NUNCA indicar como tomarlo si no se ve una instruccion clara en la imagen o receta.
 - NUNCA decir que una receta esta "clara" si hay letra manuscrita dudosa; si hay duda, marcar como "revisar".
 - Si algo parece urgente o critico, marcarlo con urgencia: "urgente"
 - Siempre recordar consultar al medico
@@ -174,6 +208,11 @@ interface OpenRouterResponse {
   };
 }
 
+interface OcrResult {
+  provider: "google-vision" | "ocr-space";
+  text: string;
+}
+
 function jsonError(locale: Locale, messagePath: string, status: number) {
   return NextResponse.json({ error: t(locale, messagePath) }, { status });
 }
@@ -216,6 +255,143 @@ function parseModelJson(content: string): unknown {
   return JSON.parse(jsonText);
 }
 
+function withTimeout(signalMs: number) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), signalMs);
+
+  return {
+    signal: controller.signal,
+    done: () => clearTimeout(timeout)
+  };
+}
+
+function cleanOcrText(text: string) {
+  return text
+    .replace(/\r/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, 7000);
+}
+
+async function runGoogleVisionOcr(imageBase64: string, mimeType: string): Promise<OcrResult | null> {
+  const apiKey = process.env.GOOGLE_CLOUD_VISION_API_KEY;
+
+  if (!apiKey || mimeType === "application/pdf") {
+    return null;
+  }
+
+  const timeout = withTimeout(ocrTimeoutMs);
+
+  try {
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: timeout.signal,
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { content: imageBase64 },
+            features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
+            imageContext: {
+              languageHints: ["es", "en", "pt"]
+            }
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      responses?: Array<{ fullTextAnnotation?: { text?: string }; textAnnotations?: Array<{ description?: string }> }>;
+    };
+    const text =
+      data.responses?.[0]?.fullTextAnnotation?.text ??
+      data.responses?.[0]?.textAnnotations?.[0]?.description ??
+      "";
+    const cleaned = cleanOcrText(text);
+
+    return cleaned ? { provider: "google-vision", text: cleaned } : null;
+  } catch {
+    return null;
+  } finally {
+    timeout.done();
+  }
+}
+
+async function runOcrSpace(imageBase64: string, mimeType: string): Promise<OcrResult | null> {
+  const apiKey = process.env.OCR_SPACE_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  const timeout = withTimeout(ocrTimeoutMs);
+  const formData = new FormData();
+  formData.set("base64Image", `data:${mimeType};base64,${imageBase64}`);
+  formData.set("language", "spa");
+  formData.set("isOverlayRequired", "false");
+  formData.set("detectOrientation", "true");
+  formData.set("scale", "true");
+  formData.set("OCREngine", "2");
+
+  try {
+    const response = await fetch("https://api.ocr.space/parse/image", {
+      method: "POST",
+      headers: { apikey: apiKey },
+      signal: timeout.signal,
+      body: formData
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      IsErroredOnProcessing?: boolean;
+      ParsedResults?: Array<{ ParsedText?: string }>;
+    };
+
+    if (data.IsErroredOnProcessing) {
+      return null;
+    }
+
+    const cleaned = cleanOcrText(data.ParsedResults?.map((result) => result.ParsedText ?? "").join("\n\n") ?? "");
+    return cleaned ? { provider: "ocr-space", text: cleaned } : null;
+  } catch {
+    return null;
+  } finally {
+    timeout.done();
+  }
+}
+
+async function runDedicatedOcr(imageBase64: string, mimeType: string): Promise<OcrResult | null> {
+  return (await runGoogleVisionOcr(imageBase64, mimeType)) ?? (await runOcrSpace(imageBase64, mimeType));
+}
+
+function buildUserPrompt(locale: Locale, ocr: OcrResult | null) {
+  const basePrompt = `${t(locale, "api.userPrompt")} ${t(locale, "api.responseLanguageInstruction")}`;
+
+  if (!ocr) {
+    return `${basePrompt}
+
+No dedicated OCR text was available. Read the original visual file directly and mark unclear text as illegible or needing review.`;
+  }
+
+  return `${basePrompt}
+
+Dedicated OCR provider: ${ocr.provider}
+OCR extracted text:
+---
+${ocr.text}
+---
+
+Use the OCR text as supporting evidence, not as absolute truth. Compare it against the original image or PDF. If OCR and the visual document disagree, prefer the visual document only when it is clearly readable. If there is doubt, mark the medication, dose, frequency, duration, or value as "revisar" or "no se lee con claridad".`;
+}
+
 export async function POST(request: Request) {
   let body: AnalyzeRequestBody;
 
@@ -245,6 +421,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const dedicatedOcr = await runDedicatedOcr(imageBase64, mimeType);
     const response = await fetch(OPENROUTER_URL, {
       method: "POST",
       headers: {
@@ -266,7 +443,7 @@ export async function POST(request: Request) {
             content: [
               {
                 type: "text",
-                text: `${t(locale, "api.userPrompt")} ${t(locale, "api.responseLanguageInstruction")}`
+                text: buildUserPrompt(locale, dedicatedOcr)
               },
               isPdf
                 ? {

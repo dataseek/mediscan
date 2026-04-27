@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAccessibility } from "@/components/AccessibilityProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { fileToDataUrl, formatFileLoadedAtParts } from "@/lib/utils";
+import { getLanguageDisplayName, useLanguageOptions } from "@/components/LanguageProvider";
+import { compressImageFileToDataUrl, fileToDataUrl, formatFileLoadedAtParts } from "@/lib/utils";
 
 interface ImageUploaderProps {
   previewUrl: string | null;
@@ -147,7 +149,7 @@ function getImageQuality(dataUrl: string): Promise<ImageQuality> {
 
 function CameraIcon() {
   return (
-    <svg aria-hidden="true" className="h-5 w-5 shrink-0 sm:h-[22px] sm:w-[22px]" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" viewBox="0 0 24 24" fill="none">
       <path
         d="M8.5 6.5 10 4.5h4l1.5 2H18a2.5 2.5 0 0 1 2.5 2.5v8A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17V9A2.5 2.5 0 0 1 6 6.5h2.5Z"
         stroke="currentColor"
@@ -162,7 +164,7 @@ function CameraIcon() {
 
 function UploadIcon() {
   return (
-    <svg aria-hidden="true" className="h-5 w-5 shrink-0 sm:h-[22px] sm:w-[22px]" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" viewBox="0 0 24 24" fill="none">
       <path d="M12 15V4.5" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" />
       <path d="m7.5 9 4.5-4.5L16.5 9" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round" />
       <path
@@ -187,7 +189,7 @@ function PdfIcon() {
 
 function ScanIcon() {
   return (
-    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" className="h-12 w-12" viewBox="0 0 24 24" fill="none">
       <path d="M8 4H6.5A2.5 2.5 0 0 0 4 6.5V8M16 4h1.5A2.5 2.5 0 0 1 20 6.5V8M8 20H6.5A2.5 2.5 0 0 1 4 17.5V16M16 20h1.5a2.5 2.5 0 0 0 2.5-2.5V16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       <path d="M8 12h8M9.5 9h5M9.5 15h3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
@@ -196,7 +198,7 @@ function ScanIcon() {
 
 function ClockIcon() {
   return (
-    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" className="h-12 w-12" viewBox="0 0 24 24" fill="none">
       <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor" strokeWidth="1.8" />
       <path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -205,7 +207,7 @@ function ClockIcon() {
 
 function SummaryIcon() {
   return (
-    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" className="h-12 w-12" viewBox="0 0 24 24" fill="none">
       <path d="M7 7h10M7 12h7M7 17h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
@@ -225,6 +227,52 @@ function CalendarIcon() {
   );
 }
 
+function GlobeIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M2.5 12h19M12 2c3 3.3 3 16.7 0 20M12 2c-3 3.3-3 16.7 0 20"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function AaIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+      <path d="M6.2 18 10 6h4l3.8 12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M8.2 14h7.6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SegmentButton({
+  label,
+  isActive,
+  onClick
+}: {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={isActive}
+      onClick={onClick}
+      className={`min-h-[44px] flex-1 rounded-2xl px-3 text-[14px] font-extrabold tracking-wide transition focus:outline-none focus:ring-4 focus:ring-medical/20 ${
+        isActive ? "bg-medical text-white shadow" : "bg-[#132235] text-white/90 hover:bg-[#1a2d42]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 function HowItWorks() {
   const { t } = useLanguage();
   const steps = [
@@ -232,19 +280,19 @@ function HowItWorks() {
       title: t("howItWorks.step1Title"),
       body: t("howItWorks.step1Body"),
       icon: <ScanIcon />,
-      className: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-medical/22 dark:text-emerald-100 dark:ring-medical/25"
+      className: "text-white/80"
     },
     {
       title: t("howItWorks.step2Title"),
       body: t("howItWorks.step2Body"),
       icon: <ClockIcon />,
-      className: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/18 dark:text-blue-100 dark:ring-blue-300/20"
+      className: "text-white/80"
     },
     {
       title: t("howItWorks.step3Title"),
       body: t("howItWorks.step3Body"),
       icon: <SummaryIcon />,
-      className: "bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-500/18 dark:text-orange-100 dark:ring-orange-300/20"
+      className: "text-white/80"
     }
   ];
 
@@ -254,7 +302,7 @@ function HowItWorks() {
         {steps.map((step, index) => (
           <div key={step.title} className="min-w-0">
             <div className="flex min-w-0 gap-3 sm:gap-4">
-              <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ring-1 sm:h-16 sm:w-16 ${step.className}`}>
+              <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl sm:h-20 sm:w-20 ${step.className}`}>
                 {step.icon}
               </div>
               <div className="min-w-0 pt-0.5">
@@ -296,6 +344,8 @@ export function ImageUploader({
   disabled = false
 }: ImageUploaderProps) {
   const { locale, t } = useLanguage();
+  const languageOptions = useLanguageOptions();
+  const { textScale, setTextScale, voiceMode, setVoiceMode } = useAccessibility();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [imageQuality, setImageQuality] = useState<ImageQuality>({ status: "idle" });
@@ -386,7 +436,7 @@ export function ImageUploader({
   }, [imageQuality.status, t]);
 
   const handleFile = useCallback(
-    async (file: File | undefined) => {
+    async (file: File | undefined, source: "camera" | "gallery") => {
       if (!file) {
         return;
       }
@@ -402,7 +452,23 @@ export function ImageUploader({
       }
 
       try {
+        if (source === "camera" && file.type.startsWith("image/") && file.size > 1_000_000) {
+          const compressible = ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type.toLowerCase());
+          if (!compressible) {
+            onError(t("uploader.compressionUnsupported"));
+            return;
+          }
+
+          const compressed = await compressImageFileToDataUrl(file, { maxBytes: 1_000_000 });
+          onImageSelected(compressed.dataUrl, file.name || t("uploader.fallbackStudyName"), file.lastModified);
+          return;
+        }
+
         const dataUrl = await fileToDataUrl(file);
+        if (source === "camera" && file.type.startsWith("image/") && file.size > 1_000_000) {
+          onError(t("uploader.compressionFailed"));
+          return;
+        }
         onImageSelected(dataUrl, file.name || t("uploader.fallbackStudyName"), file.lastModified);
       } catch (error) {
         onError(error instanceof Error ? error.message : t("uploader.loadFailed"));
@@ -413,7 +479,8 @@ export function ImageUploader({
 
   const handleInputChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      void handleFile(event.target.files?.[0]);
+      const source = event.target === cameraInputRef.current ? "camera" : "gallery";
+      void handleFile(event.target.files?.[0], source);
       event.target.value = "";
     },
     [handleFile]
@@ -444,23 +511,94 @@ export function ImageUploader({
       <div className="grid gap-3 sm:gap-3.5">
         <button
           type="button"
-          className="flex min-h-[62px] w-full min-w-0 items-center justify-center gap-3 rounded-[1.35rem] bg-[var(--app-primary)] px-4 text-[18px] font-bold leading-tight text-white shadow-lg shadow-black/15 transition hover:bg-[var(--app-primary-hover)] focus:outline-none focus:ring-4 focus:ring-blue-400/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[66px] sm:text-xl"
+          className="flex min-h-[74px] w-full min-w-0 items-center justify-center gap-3.5 rounded-[1.45rem] bg-[#e11d48] px-5 text-[18px] font-extrabold leading-tight text-white shadow-lg shadow-black/20 transition hover:bg-[#be123c] focus:outline-none focus:ring-4 focus:ring-[#fb7185]/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 min-[390px]:text-[19px] sm:min-h-[74px] sm:text-xl"
           onClick={() => cameraInputRef.current?.click()}
           disabled={disabled}
         >
           <CameraIcon />
-          {t("uploader.takePhoto")}
+          Fotografiar
         </button>
         <button
           type="button"
-          className="flex min-h-[62px] w-full min-w-0 items-center justify-center gap-3 rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card)] px-4 text-[18px] font-bold leading-tight text-[var(--app-text-strong)] shadow-sm transition hover:bg-[var(--app-card-soft)] focus:outline-none focus:ring-4 focus:ring-medical/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[66px] sm:text-xl"
+          className="flex min-h-[74px] w-full min-w-0 items-center justify-center gap-3.5 rounded-[1.45rem] border border-white/[0.10] bg-medical/15 px-5 text-[18px] font-extrabold leading-tight text-[#3dd4a5] shadow-sm transition hover:bg-medical/20 focus:outline-none focus:ring-4 focus:ring-medical/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 min-[390px]:text-[19px] sm:min-h-[74px] sm:text-xl"
           onClick={() => galleryInputRef.current?.click()}
           disabled={disabled}
         >
           <UploadIcon />
-          {t("uploader.uploadImage")}
+          Subir imagen o PDF
         </button>
       </div>
+
+      {!previewUrl ? (
+        <section className="min-w-0 divide-y divide-white/[0.08] overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-[#0b1826] shadow-[0_18px_42px_rgba(0,0,0,0.28)]">
+          <div className="px-4 py-3.5">
+            <p className="text-[12px] font-extrabold tracking-[0.14em] text-white/55">IDIOMA</p>
+            <div className="mt-3 flex items-center gap-2.5 rounded-3xl bg-[#07111b] p-2">
+              {languageOptions.map((option) => (
+                <button
+                  key={option.code}
+                  type="button"
+                  aria-pressed={option.isActive}
+                  className={`min-h-[44px] flex-1 rounded-full px-4 text-[13px] font-extrabold tracking-[0.08em] transition focus:outline-none focus:ring-4 focus:ring-medical/20 ${
+                    option.isActive ? "bg-medical text-white shadow" : "bg-[#132235] text-white/90 hover:bg-[#1a2d42]"
+                  }`}
+                  onClick={option.onSelect}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-4 py-3.5">
+            <p className="text-[12px] font-extrabold tracking-[0.14em] text-white/55">ACCESIBILIDAD</p>
+            <div className="mt-3 flex items-center gap-2 rounded-3xl bg-[#07111b] p-2">
+              <SegmentButton
+                label={t("accessibility.textNormal")}
+                isActive={textScale === "normal"}
+                onClick={() => setTextScale("normal")}
+              />
+              <SegmentButton
+                label={t("accessibility.textLarge")}
+                isActive={textScale === "large"}
+                onClick={() => setTextScale("large")}
+              />
+              <SegmentButton
+                label={t("accessibility.textXLarge")}
+                isActive={textScale === "xlarge"}
+                onClick={() => setTextScale("xlarge")}
+              />
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-3xl bg-[#07111b] px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#132235] text-white/80">
+                  <AaIcon />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[14px] font-extrabold leading-tight text-white">{t("accessibility.voiceModeLabel")}</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-white/55">{voiceMode === "on" ? "On" : "Off"}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-pressed={voiceMode === "on"}
+                onClick={() => setVoiceMode(voiceMode === "on" ? "off" : "on")}
+                className={`relative min-h-[27px] h-7 w-12 shrink-0 rounded-full border border-white/[0.10] transition ${
+                  voiceMode === "on" ? "bg-medical" : "bg-[#132235]"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition ${
+                    voiceMode === "on" ? "left-[26px]" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {previewUrl ? (
         <div className="space-y-2 sm:space-y-2.5">

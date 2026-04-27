@@ -79,6 +79,101 @@ export function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("No se pudo leer la imagen procesada."));
+    };
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen procesada."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+export async function compressImageFileToDataUrl(
+  file: File,
+  {
+    maxBytes = 1_000_000,
+    maxDimension = 2000
+  }: {
+    maxBytes?: number;
+    maxDimension?: number;
+  } = {}
+): Promise<{ dataUrl: string; outputType: string; bytes: number }> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Solo se pueden comprimir imagenes.");
+  }
+
+  const bitmap = await createImageBitmap(file);
+  let targetWidth = bitmap.width;
+  let targetHeight = bitmap.height;
+  const scale = Math.min(1, maxDimension / Math.max(targetWidth, targetHeight));
+  targetWidth = Math.max(1, Math.round(targetWidth * scale));
+  targetHeight = Math.max(1, Math.round(targetHeight * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("No se pudo inicializar el canvas para comprimir la imagen.");
+  }
+
+  ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+
+  let quality = 0.9;
+  let blob: Blob | null = null;
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(
+        (next) => resolve(next),
+        "image/jpeg",
+        quality
+      );
+    });
+
+    if (!blob) {
+      throw new Error("No se pudo generar una imagen comprimida.");
+    }
+
+    if (blob.size <= maxBytes) {
+      const dataUrl = await blobToDataUrl(blob);
+      return { dataUrl, outputType: blob.type || "image/jpeg", bytes: blob.size };
+    }
+
+    if (quality > 0.55) {
+      quality = Math.max(0.5, quality - 0.1);
+      continue;
+    }
+
+    const nextWidth = Math.max(1, Math.round(canvas.width * 0.85));
+    const nextHeight = Math.max(1, Math.round(canvas.height * 0.85));
+    if (nextWidth === canvas.width || nextHeight === canvas.height) {
+      break;
+    }
+
+    const nextCanvas = document.createElement("canvas");
+    nextCanvas.width = nextWidth;
+    nextCanvas.height = nextHeight;
+    const nextCtx = nextCanvas.getContext("2d");
+    if (!nextCtx) {
+      break;
+    }
+    nextCtx.drawImage(canvas, 0, 0, nextWidth, nextHeight);
+    canvas.width = nextWidth;
+    canvas.height = nextHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(nextCanvas, 0, 0);
+  }
+
+  throw new Error("No se pudo comprimir la imagen por debajo de 1 MB.");
+}
+
 export function splitImageDataUrl(dataUrl: string): { mimeType: string; imageBase64: string } {
   const match = dataUrl.match(fileDataUrlPattern);
 

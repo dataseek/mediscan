@@ -7,10 +7,12 @@ const secret =
   process.env.AUTH_SECRET ??
   process.env.NEXTAUTH_SECRET ??
   process.env.OPENROUTER_API_KEY?.slice(0, 32);
+const devFallbackSecret =
+  process.env.NODE_ENV !== "production" && !secret ? "dev-secret" : undefined;
 
 const nextAuthOptions: NextAuthConfig = {
   ...authConfig,
-  ...(secret ? { secret } : {}),
+  ...((secret ?? devFallbackSecret) ? { secret: secret ?? devFallbackSecret } : {}),
   session: { strategy: "jwt" as const }
 };
 
