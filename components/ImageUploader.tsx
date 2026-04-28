@@ -18,6 +18,11 @@ interface ImageUploaderProps {
 }
 
 const acceptedFileTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif", "application/pdf"];
+const maxOriginalImageBytes = 12 * 1024 * 1024;
+const maxPdfBytes = 12 * 1024 * 1024;
+const maxOptimizedImageBytes = 900_000;
+const maxOptimizedImageDimension = 1600;
+const compressibleImageTypes = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 type ImageQualityIssue = "tooDark" | "tooBright" | "lowContrast" | "tooSmall" | "notSharp" | "unreadable";
 type ImageQuality =
   | { status: "idle" }
@@ -436,7 +441,7 @@ export function ImageUploader({
   }, [imageQuality.status, t]);
 
   const handleFile = useCallback(
-    async (file: File | undefined, source: "camera" | "gallery") => {
+    async (file: File | undefined) => {
       if (!file) {
         return;
       }
@@ -446,30 +451,48 @@ export function ImageUploader({
         return;
       }
 
-      if (file.size > 12 * 1024 * 1024) {
+      const isImage = file.type.startsWith("image/");
+      const isPdfFile = file.type === "application/pdf";
+      const maxFileBytes = isPdfFile ? maxPdfBytes : maxOriginalImageBytes;
+
+      if (file.size > maxFileBytes) {
         onError(t("uploader.tooLarge"));
         return;
       }
 
       try {
-        if (source === "camera" && file.type.startsWith("image/") && file.size > 1_000_000) {
-          const compressible = ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type.toLowerCase());
-          if (!compressible) {
+        if (isImage) {
+          const isCompressible = compressibleImageTypes.has(file.type.toLowerCase());
+
+          if (!isCompressible && file.size > maxOptimizedImageBytes) {
             onError(t("uploader.compressionUnsupported"));
             return;
           }
 
-          const compressed = await compressImageFileToDataUrl(file, { maxBytes: 1_000_000 });
-          onImageSelected(compressed.dataUrl, file.name || t("uploader.fallbackStudyName"), file.lastModified);
+          if (isCompressible) {
+            const compressed = await compressImageFileToDataUrl(file, {
+              maxBytes: maxOptimizedImageBytes,
+              maxDimension: maxOptimizedImageDimension
+            });
+
+            if (compressed.bytes > maxOptimizedImageBytes) {
+              onError(t("uploader.compressionFailed"));
+              return;
+            }
+
+            const optimizedName = file.name ? file.name.replace(/\.[^.]+$/, ".jpg") : t("uploader.fallbackStudyName");
+            onImageSelected(compressed.dataUrl, optimizedName, file.lastModified);
+            return;
+          }
+        }
+
+        if (isPdfFile || isImage) {
+          const dataUrl = await fileToDataUrl(file);
+          onImageSelected(dataUrl, file.name || t("uploader.fallbackStudyName"), file.lastModified);
           return;
         }
 
-        const dataUrl = await fileToDataUrl(file);
-        if (source === "camera" && file.type.startsWith("image/") && file.size > 1_000_000) {
-          onError(t("uploader.compressionFailed"));
-          return;
-        }
-        onImageSelected(dataUrl, file.name || t("uploader.fallbackStudyName"), file.lastModified);
+        onError(t("uploader.invalidFormat"));
       } catch (error) {
         onError(error instanceof Error ? error.message : t("uploader.loadFailed"));
       }
@@ -479,8 +502,7 @@ export function ImageUploader({
 
   const handleInputChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const source = event.target === cameraInputRef.current ? "camera" : "gallery";
-      void handleFile(event.target.files?.[0], source);
+      void handleFile(event.target.files?.[0]);
       event.target.value = "";
     },
     [handleFile]

@@ -171,7 +171,7 @@ export async function compressImageFileToDataUrl(
     ctx.drawImage(nextCanvas, 0, 0);
   }
 
-  throw new Error("No se pudo comprimir la imagen por debajo de 1 MB.");
+  throw new Error(`No se pudo comprimir la imagen por debajo de ${Math.round(maxBytes / 1000)} KB.`);
 }
 
 export function splitImageDataUrl(dataUrl: string): { mimeType: string; imageBase64: string } {

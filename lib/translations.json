@@ -73,8 +73,8 @@
     "uploader": {
       "invalidFormat": "Subi una imagen o PDF en formato PNG, JPG, WebP, HEIC o PDF.",
       "tooLarge": "El archivo pesa demasiado. Proba con menos de 12 MB.",
-      "compressionFailed": "La foto es muy pesada para OCR. Proba sacar otra foto (mejor luz) o baja la calidad/MP de la camara para que pese menos de 1 MB.",
-      "compressionUnsupported": "Tu camara guardo la imagen en un formato que no podemos comprimir. Proba subirla desde galeria o cambia el formato de la camara a JPG/HEIC mas liviano.",
+      "compressionFailed": "La foto sigue muy pesada para analizar. Proba sacar otra foto con mejor luz o baja la calidad/MP de la camara.",
+      "compressionUnsupported": "La imagen esta en un formato pesado que no podemos optimizar en este navegador. Proba subirla en JPG, PNG o WebP.",
       "loadFailed": "No se pudo cargar el archivo.",
       "takePhoto": "Escanear receta o medicamento",
       "uploadImage": "Subir analisis o PDF",
@@ -277,8 +277,8 @@
     "uploader": {
       "invalidFormat": "Upload an image or PDF in PNG, JPG, WebP, HEIC, or PDF format.",
       "tooLarge": "The file is too large. Try one under 12 MB.",
-      "compressionFailed": "This photo is too large for OCR. Try taking another photo (better lighting) or lower your camera quality so it stays under 1 MB.",
-      "compressionUnsupported": "Your camera saved the photo in a format we can't compress. Try uploading from the gallery or change the camera format to JPG/WebP.",
+      "compressionFailed": "This photo is still too large to analyze. Try taking another photo with better lighting or lower your camera quality.",
+      "compressionUnsupported": "This image uses a heavy format that this browser cannot optimize. Try uploading it as JPG, PNG, or WebP.",
       "loadFailed": "The file could not be loaded.",
       "takePhoto": "Scan prescription or medication",
       "uploadImage": "Upload analysis or PDF",
@@ -481,8 +481,8 @@
     "uploader": {
       "invalidFormat": "Envie uma imagem ou PDF em PNG, JPG, WebP, HEIC ou PDF.",
       "tooLarge": "O arquivo esta muito pesado. Tente com menos de 12 MB.",
-      "compressionFailed": "A foto esta grande demais para OCR. Tente tirar outra foto (melhor luz) ou reduza a qualidade da camera para ficar abaixo de 1 MB.",
-      "compressionUnsupported": "A camera salvou a imagem em um formato que nao conseguimos comprimir. Tente enviar pela galeria ou mude o formato da camera para JPG/WebP.",
+      "compressionFailed": "A foto ainda esta grande demais para analisar. Tente tirar outra foto com melhor luz ou reduza a qualidade da camera.",
+      "compressionUnsupported": "A imagem esta em um formato pesado que este navegador nao consegue otimizar. Tente enviar como JPG, PNG ou WebP.",
       "loadFailed": "Nao foi possivel carregar o arquivo.",
       "takePhoto": "Escanear receita ou medicamento",
       "uploadImage": "Enviar exame ou PDF",
