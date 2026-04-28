@@ -3,12 +3,14 @@ import { resolveLocale, t, type Locale } from "@/lib/i18n";
 import { normalizeAnalysisResponse } from "@/lib/utils";
 
 export const runtime = "edge";
+export const maxDuration = 60;
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "google/gemini-2.5-pro";
+const MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 const maxImageBase64Length = 22 * 1024 * 1024;
 const supportedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif", "application/pdf"]);
 const ocrTimeoutMs = 14000;
+const openRouterTimeoutMs = 45000;
 
 const systemPrompt = `Sos un asistente medico educativo. Tu funcion es ayudar a personas comunes
 a entender estudios medicos, recetas medicas y medicamentos ANTES de ir al medico o farmaceutico.
@@ -436,6 +438,7 @@ export async function POST(request: Request) {
 
   try {
     const dedicatedOcr = await runDedicatedOcr(imageBase64, mimeType);
+    const timeout = withTimeout(openRouterTimeoutMs);
     const response = await fetch(OPENROUTER_URL, {
       method: "POST",
       headers: {
@@ -444,9 +447,12 @@ export async function POST(request: Request) {
         "HTTP-Referer": "https://mediscan.local",
         "X-Title": "MediScan"
       },
+      signal: timeout.signal,
       body: JSON.stringify({
         model: MODEL,
         response_format: { type: "json_object" },
+        temperature: 0.1,
+        max_tokens: 1800,
         messages: [
           {
             role: "system",
@@ -478,6 +484,7 @@ export async function POST(request: Request) {
         ]
       })
     });
+    timeout.done();
 
     const { data: openRouterData, text: rawProviderText } = await readOpenRouterResponse(response);
 
@@ -511,6 +518,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ result: normalized });
   } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return jsonError(locale, "api.connectionFailed", 504);
+    }
+
     if (error instanceof SyntaxError) {
       return jsonError(locale, "api.invalidModelJson", 502);
     }
