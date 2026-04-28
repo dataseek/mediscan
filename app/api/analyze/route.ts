@@ -3,14 +3,14 @@ import { resolveLocale, t, type Locale } from "@/lib/i18n";
 import { normalizeAnalysisResponse } from "@/lib/utils";
 
 export const runtime = "edge";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
+const MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.5-pro";
 const maxImageBase64Length = 22 * 1024 * 1024;
 const supportedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif", "application/pdf"]);
 const ocrTimeoutMs = 14000;
-const openRouterTimeoutMs = 45000;
+const openRouterTimeoutMs = 260000;
 
 const systemPrompt = `Sos un asistente medico educativo. Tu funcion es ayudar a personas comunes
 a entender estudios medicos, recetas medicas y medicamentos ANTES de ir al medico o farmaceutico.
@@ -452,7 +452,7 @@ export async function POST(request: Request) {
         model: MODEL,
         response_format: { type: "json_object" },
         temperature: 0.1,
-        max_tokens: 1800,
+        max_tokens: 2200,
         messages: [
           {
             role: "system",
@@ -483,8 +483,7 @@ export async function POST(request: Request) {
           }
         ]
       })
-    });
-    timeout.done();
+    }).finally(() => timeout.done());
 
     const { data: openRouterData, text: rawProviderText } = await readOpenRouterResponse(response);
 
