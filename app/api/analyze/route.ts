@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { resolveLocale, t, type Locale } from "@/lib/i18n";
 import { normalizeAnalysisResponse } from "@/lib/utils";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
