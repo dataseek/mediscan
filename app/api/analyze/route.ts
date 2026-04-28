@@ -255,6 +255,20 @@ function parseModelJson(content: string): unknown {
   return JSON.parse(jsonText);
 }
 
+async function readOpenRouterResponse(response: Response): Promise<{ data: OpenRouterResponse | null; text: string }> {
+  const text = await response.text();
+
+  if (!text.trim()) {
+    return { data: null, text: "" };
+  }
+
+  try {
+    return { data: JSON.parse(text) as OpenRouterResponse, text };
+  } catch {
+    return { data: null, text };
+  }
+}
+
 function withTimeout(signalMs: number) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), signalMs);
@@ -465,7 +479,7 @@ export async function POST(request: Request) {
       })
     });
 
-    const openRouterData = (await response.json()) as OpenRouterResponse;
+    const { data: openRouterData, text: rawProviderText } = await readOpenRouterResponse(response);
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
@@ -473,9 +487,13 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { error: openRouterData.error?.message ?? t(locale, "api.providerFailed") },
+        { error: openRouterData?.error?.message ?? (rawProviderText.slice(0, 240) || t(locale, "api.providerFailed")) },
         { status: response.status }
       );
+    }
+
+    if (!openRouterData) {
+      return jsonError(locale, "api.providerFailed", 502);
     }
 
     const content = extractJsonText(openRouterData.choices?.[0]?.message?.content);
