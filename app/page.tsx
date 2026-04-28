@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnalysisResult } from "@/components/AnalysisResult";
-import { AccessibilityControls } from "@/components/AccessibilityControls";
 import { Header } from "@/components/Header";
 import { ImageUploader } from "@/components/ImageUploader";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { AnalysisResponse, AnalyzeApiResponse } from "@/lib/types";
@@ -204,15 +202,6 @@ export default function HomePage() {
       <Header />
 
       <div className="min-h-0 min-w-0 flex-1 space-y-4 sm:space-y-5 lg:space-y-6">
-        <section className="grid min-w-0 gap-3 sm:grid-cols-2">
-          <div className="rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card)] p-4 shadow-[var(--app-shadow)]">
-            <LanguageSwitcher />
-          </div>
-          <div className="rounded-[1.35rem] border border-[var(--app-border)] bg-[var(--app-card)] p-4 shadow-[var(--app-shadow)]">
-            <AccessibilityControls />
-          </div>
-        </section>
-
         <div className="min-w-0 space-y-4 sm:space-y-5 lg:space-y-6">
           <div className="min-w-0 space-y-4 sm:space-y-5">
             <ImageUploader
