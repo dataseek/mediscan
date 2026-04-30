@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.5-pro";
+const OPENROUTER_MODEL = "google/gemini-2.5-pro";
 const maxImageBase64Length = 22 * 1024 * 1024;
 const supportedMimeTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif", "application/pdf"]);
 const ocrTimeoutMs = 14000;
@@ -450,7 +450,7 @@ export async function POST(request: Request) {
       },
       signal: timeout.signal,
       body: JSON.stringify({
-        model: MODEL,
+        model: OPENROUTER_MODEL,
         response_format: { type: "json_object" },
         temperature: 0.1,
         max_tokens: 2200,

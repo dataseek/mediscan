@@ -35,7 +35,7 @@ La app queda disponible en `http://localhost:3000`.
 OPENROUTER_API_KEY=sk-or-tu_api_key
 ```
 
-El endpoint usado por la app es `POST /api/analyze` y llama a `https://openrouter.ai/api/v1/chat/completions` con el modelo `anthropic/claude-sonnet-4` (Claude Sonnet 4).
+El endpoint usado por la app es `POST /api/analyze` y llama a `https://openrouter.ai/api/v1/chat/completions` con el modelo fijo `google/gemini-2.5-pro`. La app ignora overrides por entorno para evitar usar modelos mas caros por accidente.
 
 ## Scripts
 
