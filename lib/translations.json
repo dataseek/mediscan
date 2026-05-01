@@ -43,6 +43,15 @@
       "missingPhone": "Configura el telefono del familiar en Configuracion para poder compartir.",
       "openSettings": "Ir a Configuracion"
     },
+    "pwa": {
+      "installTitle": "Instala MediScan",
+      "installBody": "Acceso rapido desde la pantalla de inicio y experiencia tipo app.",
+      "installAction": "Instalar app",
+      "updateTitle": "Actualizacion disponible",
+      "updateBody": "Hay una version nueva de MediScan lista para usar.",
+      "updateAction": "Actualizar ahora",
+      "dismiss": "Cerrar"
+    },
     "home": {
       "selectStudyFirst": "Primero selecciona o fotografia un estudio.",
       "analyzeStudy": "Analizar",
@@ -247,6 +256,15 @@
       "missingPhone": "Set the family phone in Settings to share.",
       "openSettings": "Go to Settings"
     },
+    "pwa": {
+      "installTitle": "Install MediScan",
+      "installBody": "Quick access from the home screen with an app-like experience.",
+      "installAction": "Install app",
+      "updateTitle": "Update available",
+      "updateBody": "A new version of MediScan is ready.",
+      "updateAction": "Update now",
+      "dismiss": "Dismiss"
+    },
     "home": {
       "selectStudyFirst": "Select or photograph a study first.",
       "analyzeStudy": "Analyze",
@@ -450,6 +468,15 @@
       "button": "Compartilhar com familiar",
       "missingPhone": "Configure o telefone do familiar em Configuracao para compartilhar.",
       "openSettings": "Ir para Configuracao"
+    },
+    "pwa": {
+      "installTitle": "Instale o MediScan",
+      "installBody": "Acesso rapido pela tela inicial com experiencia de app.",
+      "installAction": "Instalar app",
+      "updateTitle": "Atualizacao disponivel",
+      "updateBody": "Ha uma nova versao do MediScan pronta para usar.",
+      "updateAction": "Atualizar agora",
+      "dismiss": "Fechar"
     },
     "home": {
       "selectStudyFirst": "Primeiro selecione ou fotografe um exame.",
