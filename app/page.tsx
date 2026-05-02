@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnalysisResult } from "@/components/AnalysisResult";
+import { ErrorNotice } from "@/components/ErrorNotice";
 import { Header } from "@/components/Header";
 import { ImageUploader } from "@/components/ImageUploader";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
@@ -42,17 +43,23 @@ function ShieldIcon() {
   );
 }
 
-async function readAnalyzeResponse(response: Response): Promise<AnalyzeApiResponse> {
+interface FriendlyError {
+  title: string;
+  message: string;
+  canRetry?: boolean;
+}
+
+async function readAnalyzeResponse(response: Response, fallbackMessage: string): Promise<AnalyzeApiResponse> {
   const text = await response.text();
 
   if (!text.trim()) {
-    return { error: "No pudimos leer la respuesta del servidor." };
+    return { error: fallbackMessage };
   }
 
   try {
     return JSON.parse(text) as AnalyzeApiResponse;
   } catch {
-    return { error: text.slice(0, 240) || "La respuesta del servidor no fue valida." };
+    return { error: fallbackMessage };
   }
 }
 
@@ -62,7 +69,7 @@ export default function HomePage() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileLoadedAtMs, setFileLoadedAtMs] = useState<number | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FriendlyError | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
@@ -144,6 +151,17 @@ export default function HomePage() {
     setError(null);
   }, []);
 
+  const handleUploadError = useCallback(
+    (message: string) => {
+      setError({
+        title: t("home.uploadErrorTitle"),
+        message,
+        canRetry: false
+      });
+    },
+    [t]
+  );
+
   const handleClear = useCallback(() => {
     setPreviewUrl(null);
     setFileName(null);
@@ -160,7 +178,11 @@ export default function HomePage() {
 
   const handleAnalyze = useCallback(async () => {
     if (!previewUrl) {
-      setError(t("home.selectStudyFirst"));
+      setError({
+        title: t("home.uploadErrorTitle"),
+        message: t("home.selectStudyFirst"),
+        canRetry: false
+      });
       return;
     }
 
@@ -178,9 +200,17 @@ export default function HomePage() {
         body: JSON.stringify({ imageBase64, mimeType, locale })
       });
 
-      const data = await readAnalyzeResponse(response);
+      const data = await readAnalyzeResponse(response, t("home.serverResponseFailed"));
 
       if (!response.ok || "error" in data) {
+        if (response.status === 504) {
+          throw new Error(t("home.timeoutFailed"));
+        }
+
+        if (response.status >= 500) {
+          throw new Error(t("home.serverBusy"));
+        }
+
         throw new Error("error" in data ? data.error : t("home.analyzeFailed"));
       }
 
@@ -191,14 +221,25 @@ export default function HomePage() {
       }
       setResult(data.result);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : t("home.analyzeFailed"));
+      const message =
+        caughtError instanceof TypeError
+          ? t("home.networkFailed")
+          : caughtError instanceof Error
+            ? caughtError.message
+            : t("home.analyzeFailed");
+
+      setError({
+        title: t("home.analysisErrorTitle"),
+        message,
+        canRetry: true
+      });
     } finally {
       setIsAnalyzing(false);
     }
   }, [locale, previewUrl, t]);
 
   return (
-    <main className="relative box-border mx-auto flex min-h-screen w-full max-w-none flex-col bg-ink pb-[max(6rem,env(safe-area-inset-bottom,0px))] pl-[max(0.9rem,env(safe-area-inset-left,0px))] pr-[max(0.9rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))] text-[var(--app-text)] antialiased sm:max-w-2xl sm:px-5 sm:pb-8 sm:pt-5 lg:max-w-5xl lg:px-8 xl:max-w-6xl">
+    <main className="relative box-border mx-auto flex min-h-screen w-full max-w-none flex-col bg-ink pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pl-[max(0.9rem,env(safe-area-inset-left,0px))] pr-[max(0.9rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top,0px))] text-[var(--app-text)] antialiased sm:max-w-2xl sm:px-5 sm:pb-8 sm:pt-5 lg:max-w-5xl lg:px-8 xl:max-w-6xl">
       <Header />
 
       <div className="min-h-0 min-w-0 flex-1 space-y-4 sm:space-y-5 lg:space-y-6">
@@ -210,7 +251,7 @@ export default function HomePage() {
               fileLoadedAtMs={fileLoadedAtMs}
               onImageSelected={handleImageSelected}
               onClear={handleClear}
-              onError={setError}
+              onError={handleUploadError}
               disabled={isAnalyzing}
             />
 
@@ -242,12 +283,15 @@ export default function HomePage() {
             ) : null}
 
             {error ? (
-              <div
-                className="min-w-0 max-w-full break-words rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-[13px] leading-relaxed text-red-100 min-[380px]:text-sm sm:text-[15px]"
-                role="alert"
-              >
-                {error}
-              </div>
+              <ErrorNotice
+                title={error.title}
+                message={error.message}
+                primaryAction={error.canRetry && previewUrl && !isAnalyzing ? handleAnalyze : undefined}
+                primaryLabel={error.canRetry && previewUrl && !isAnalyzing ? t("home.retryAnalyze") : undefined}
+                dismissLabel={t("home.dismissError")}
+                onDismiss={() => setError(null)}
+                tone={error.canRetry ? "danger" : "warning"}
+              />
             ) : null}
 
             {isAnalyzing ? <LoadingSkeleton /> : null}
@@ -257,7 +301,7 @@ export default function HomePage() {
         </div>
 
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-none border-t border-[var(--app-border)] bg-[var(--app-card)] px-5 py-2.5 shadow-[0_-10px_30px_rgba(18,55,95,0.10)] sm:hidden">
+      <nav className="hidden">
         <div className="mx-auto grid max-w-md grid-cols-3 gap-2 text-center text-[12px] font-bold text-[var(--app-muted)]">
           <a href="/" className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl text-[var(--app-medical)]">
             <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none">

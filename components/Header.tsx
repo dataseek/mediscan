@@ -41,28 +41,7 @@ export function Header() {
     <header className="mb-5 min-w-0 sm:mb-7">
       <div className="relative flex min-h-[86px] items-start justify-between gap-2">
         {!user ? (
-          <Link
-            href="/login"
-            aria-label={t("header.login")}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--app-border)] bg-[var(--app-card)] p-0 text-[var(--app-text)] shadow-sm transition hover:bg-[var(--app-card-soft)] focus:outline-none focus:ring-4 focus:ring-medical/25"
-          >
-            <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M20 21a8 8 0 0 0-16 0"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M12 13a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
+          <div className="h-12 w-12 shrink-0" aria-hidden />
         ) : (
           <div className="relative flex items-center gap-2">
             <PlanBadge plan={user.plan} />
@@ -153,14 +132,6 @@ export function Header() {
               <div className="border-b border-[var(--app-border)] px-4 py-3.5">
                 <AccessibilityControls />
               </div>
-              <Link
-                role="menuitem"
-                href="/historial"
-                className="block px-4 py-3.5 text-[15px] font-semibold text-[var(--app-text)] hover:bg-[var(--app-card-soft)]"
-                onClick={() => setIsHamburgerOpen(false)}
-              >
-                {t("header.myAnalyses")}
-              </Link>
               <Link
                 role="menuitem"
                 href="/configuracion"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { ErrorNotice } from "@/components/ErrorNotice";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/components/LanguageProvider";
 import { MediScanLogoMark } from "@/components/MediScanLogoMark";
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isGoogleSending, setIsGoogleSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -20,7 +22,13 @@ export default function LoginPage() {
         </div>
 
         <div className="flex items-center justify-center">
-          <MediScanLogoMark className="h-11 w-11 text-medical" />
+          <div className="inline-flex items-center justify-center gap-x-1.5 rounded-xl px-1 py-1">
+            <MediScanLogoMark className="h-12 w-12 shrink-0 translate-y-px text-medical" />
+            <span className="text-[clamp(2rem,8vw,2.6rem)] font-bold leading-none tracking-normal">
+              <span className="text-white">Medi</span>
+              <span className="text-medical">Scan</span>
+            </span>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -31,9 +39,19 @@ export default function LoginPage() {
         <button
           type="button"
           className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/[0.10] bg-panelMuted px-4 text-[14px] font-semibold text-white/95 transition hover:bg-panelSoft focus:outline-none focus:ring-2 focus:ring-medical/60"
-          onClick={() => void signIn("google", { callbackUrl: "/" })}
+          disabled={isGoogleSending}
+          onClick={async () => {
+            setError(null);
+            setIsGoogleSending(true);
+            try {
+              await signIn("google", { callbackUrl: "/" });
+            } catch {
+              setError(t("login.googleFailed"));
+              setIsGoogleSending(false);
+            }
+          }}
         >
-          {t("login.continueWithGoogle")}
+          {isGoogleSending ? t("login.redirectingGoogle") : t("login.continueWithGoogle")}
         </button>
 
         <div className="relative">
@@ -79,9 +97,12 @@ export default function LoginPage() {
           </label>
 
           {error ? (
-            <div className="rounded-2xl border border-red-400/25 bg-red-500/10 p-3 text-[13px] text-red-100" role="alert">
-              {error}
-            </div>
+            <ErrorNotice
+              title={t("login.errorTitle")}
+              message={error}
+              dismissLabel={t("home.dismissError")}
+              onDismiss={() => setError(null)}
+            />
           ) : null}
 
           <button
