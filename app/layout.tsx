@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { getMessages } from "@/lib/i18n";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const messages = getMessages("es");
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="es" data-theme="dark">
       <body className={inter.className}>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
