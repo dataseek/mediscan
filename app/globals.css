@@ -6,7 +6,7 @@
   color-scheme: dark;
   background: #010b14;
   color: #f8fafc;
-  --mediscan-text-zoom: 1;
+  --medicscan-text-zoom: 1;
   --app-bg: #010b14;
   --app-bg-soft: #07111b;
   --app-card: #0b1826;
@@ -96,7 +96,7 @@ body {
 
 @supports (zoom: 1) {
   body {
-    zoom: var(--mediscan-text-zoom);
+    zoom: var(--medicscan-text-zoom);
   }
 }
 

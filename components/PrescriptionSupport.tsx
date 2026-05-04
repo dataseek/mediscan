@@ -18,7 +18,7 @@ interface Pharmacy {
   source: "google" | "osm";
 }
 
-type LookupStatus = "idle" | "loading" | "ready" | "error" | "denied";
+type LookupStatus = "idle" | "loading" | "ready" | "error" | "denied" | "location-off";
 type PharmacySource = "google" | "osm" | null;
 
 function normalizeMedicationName(value: string) {
@@ -136,7 +136,7 @@ export function PrescriptionSupport({ medications }: { medications: MedicalValue
 
   const handleLookup = useCallback(async () => {
     if (!("geolocation" in navigator)) {
-      setStatus("error");
+      setStatus("location-off");
       return;
     }
 
@@ -160,7 +160,17 @@ export function PrescriptionSupport({ medications }: { medications: MedicalValue
       setStatus("ready");
     } catch (error) {
       const code = typeof error === "object" && error !== null && "code" in error ? (error as { code?: number }).code : null;
-      setStatus(code === 1 ? "denied" : "error");
+      if (code === 1) {
+        setStatus("denied");
+        return;
+      }
+
+      if (code === 2 || code === 3) {
+        setStatus("location-off");
+        return;
+      }
+
+      setStatus("error");
     }
   }, [locale]);
 
@@ -207,9 +217,9 @@ export function PrescriptionSupport({ medications }: { medications: MedicalValue
           </div>
         ) : null}
 
-        {status === "denied" ? (
-          <div className="rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-[13px] leading-relaxed text-amber-100">
-            {t("prescriptionSupport.permissionDenied")}
+        {status === "denied" || status === "location-off" ? (
+          <div className="rounded-xl border border-amber-300/20 bg-amber-400/10 p-3 text-[14px] font-semibold leading-relaxed text-amber-100">
+            {status === "denied" ? t("prescriptionSupport.permissionDenied") : t("prescriptionSupport.locationDisabled")}
           </div>
         ) : null}
 
