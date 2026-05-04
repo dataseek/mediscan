@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MediScan">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MedicScan">
   <rect width="512" height="512" rx="128" fill="#07111b"/>
   <path d="M256 397 111 263.5C43 201 39 104.5 116 76.5c55.5-20.2 103.5 8.5 140 58 36.5-49.5 84.5-78.2 140-58 77 28 73 124.5 5 187L256 397Z" fill="none" stroke="#eefcf8" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M68 244h91l36-70 56 129 50-173 45 114h98" fill="none" stroke="#5ee0b5" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>

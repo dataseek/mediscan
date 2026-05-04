@@ -3,7 +3,7 @@ import translations from "@/lib/translations.json";
 export type Locale = keyof typeof translations;
 
 export const DEFAULT_LOCALE: Locale = "es";
-export const LOCALE_STORAGE_KEY = "mediscan-locale";
+export const LOCALE_STORAGE_KEY = "medicscan-locale";
 export const AVAILABLE_LOCALES = Object.keys(translations) as Locale[];
 
 type TranslationTree = (typeof translations)[Locale];

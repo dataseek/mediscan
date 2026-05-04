@@ -25,8 +25,8 @@ export function MedicamentoClient() {
 
   useEffect(() => {
     try {
-      setPreviewUrl(window.sessionStorage.getItem("mediscan-last-preview"));
-      setLastEspecialidad(window.sessionStorage.getItem("mediscan-last-especialidad"));
+      setPreviewUrl(window.sessionStorage.getItem("medicscan-last-preview"));
+      setLastEspecialidad(window.sessionStorage.getItem("medicscan-last-especialidad"));
     } catch {
       setPreviewUrl(null);
       setLastEspecialidad(null);

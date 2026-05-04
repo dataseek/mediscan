@@ -15,9 +15,9 @@ interface AccessibilityContextValue {
   setVoiceMode: (mode: VoiceMode) => void;
 }
 
-const TEXT_SCALE_STORAGE_KEY = "mediscan-text-scale";
-const THEME_MODE_STORAGE_KEY = "mediscan-theme-mode";
-const VOICE_MODE_STORAGE_KEY = "mediscan-voice-mode";
+const TEXT_SCALE_STORAGE_KEY = "medicscan-text-scale";
+const THEME_MODE_STORAGE_KEY = "medicscan-theme-mode";
+const VOICE_MODE_STORAGE_KEY = "medicscan-voice-mode";
 const AccessibilityContext = createContext<AccessibilityContextValue | null>(null);
 const textZoomByScale: Record<TextScale, string> = {
   normal: "1",
@@ -62,7 +62,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     document.documentElement.dataset.textScale = textScale;
-    document.documentElement.style.setProperty("--mediscan-text-zoom", textZoomByScale[textScale]);
+    document.documentElement.style.setProperty("--medicscan-text-zoom", textZoomByScale[textScale]);
     window.localStorage.setItem(TEXT_SCALE_STORAGE_KEY, textScale);
   }, [textScale]);
 

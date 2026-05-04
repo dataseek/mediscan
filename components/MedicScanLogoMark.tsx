@@ -1,7 +1,7 @@
 /**
- * Marca MediScan: corazón + línea de pulso (ECG). Optimizado para fondo oscuro.
+ * Marca MedicScan: corazón + línea de pulso (ECG). Optimizado para fondo oscuro.
  */
-export function MediScanLogoMark({ className = "" }: { className?: string }) {
+export function MedicScanLogoMark({ className = "" }: { className?: string }) {
   return (
     <svg
       aria-hidden="true"

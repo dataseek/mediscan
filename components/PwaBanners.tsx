@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 
-const installDismissedKey = "mediscan-pwa-install-dismissed";
+const installDismissedKey = "medicscan-pwa-install-dismissed";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

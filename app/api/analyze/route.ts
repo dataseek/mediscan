@@ -445,8 +445,8 @@ export async function POST(request: Request) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://mediscan.local",
-        "X-Title": "MediScan"
+        "HTTP-Referer": "https://medicscan.local",
+        "X-Title": "MedicScan"
       },
       signal: timeout.signal,
       body: JSON.stringify({
@@ -470,7 +470,7 @@ export async function POST(request: Request) {
                 ? {
                     type: "file",
                     file: {
-                      filename: "mediscan-document.pdf",
+                      filename: "medicscan-document.pdf",
                       file_data: `data:${mimeType};base64,${imageBase64}`
                     }
                   }

@@ -28,7 +28,7 @@ async function fetchWikipediaThumbnail(wiki: "es" | "en", title: string) {
   api.searchParams.set("titles", title);
 
   const response = await fetch(api.toString(), {
-    headers: { "User-Agent": "MediScan/1.0 (medication-image; +https://example.invalid)" }
+    headers: { "User-Agent": "MedicScan/1.0 (medication-image; +https://example.invalid)" }
   });
 
   if (!response.ok) return null;

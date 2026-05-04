@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { getMessages } from "@/lib/i18n";
@@ -14,12 +15,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: messages.meta.title,
   description: messages.meta.description,
-  applicationName: "MediScan",
+  applicationName: "MedicScan",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MediScan"
+    title: "MedicScan"
   },
   formatDetection: {
     telephone: false
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icons/mediscan-heart.svg", type: "image/svg+xml" },
+      { url: "/icons/medicscan-heart.svg", type: "image/svg+xml" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }
     ],
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="es" data-theme="dark">
       <body className={inter.className}>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );

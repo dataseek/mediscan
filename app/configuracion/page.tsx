@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 
-const FAMILY_PHONE_STORAGE_KEY = "mediscan-family-phone";
+const FAMILY_PHONE_STORAGE_KEY = "medicscan-family-phone";
 
 function normalizeWhatsAppPhone(input: string) {
   return input.replace(/[^\d+]/g, "").replace(/^\+/, "").trim();

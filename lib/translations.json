@@ -1,7 +1,7 @@
 {
   "es": {
     "meta": {
-      "title": "MediScan | Entende tus estudios medicos",
+      "title": "MedicScan | Entende tus estudios medicos",
       "description": "PWA para fotografiar estudios medicos y recibir una explicacion clara, orientativa y accesible antes de la consulta."
     },
     "language": {
@@ -44,11 +44,11 @@
       "openSettings": "Ir a Configuracion"
     },
     "pwa": {
-      "installTitle": "Instala MediScan",
+      "installTitle": "Instala MedicScan",
       "installBody": "Acceso rapido desde la pantalla de inicio y experiencia tipo app.",
       "installAction": "Instalar app",
       "updateTitle": "Actualizacion disponible",
-      "updateBody": "Hay una version nueva de MediScan lista para usar.",
+      "updateBody": "Hay una version nueva de MedicScan lista para usar.",
       "updateAction": "Actualizar ahora",
       "dismiss": "Cerrar"
     },
@@ -62,12 +62,12 @@
       "serverResponseFailed": "El servidor respondio de forma inesperada. Proba de nuevo en unos minutos.",
       "timeoutFailed": "El analisis tardo mas de lo esperado. Proba otra vez o subi una foto mas liviana y nitida.",
       "serverBusy": "El servicio de analisis esta ocupado ahora. Espera unos minutos y volve a intentar.",
-      "networkFailed": "No pudimos conectar con MediScan. Revisa tu conexion y proba de nuevo.",
+      "networkFailed": "No pudimos conectar con MedicScan. Revisa tu conexion y proba de nuevo.",
       "retryAnalyze": "Intentar de nuevo",
       "dismissError": "Cerrar aviso"
     },
     "howItWorks": {
-      "title": "Como funciona MediScan",
+      "title": "Como funciona MedicScan",
       "step1Title": "Fotografia tu receta, medicamento o estudio",
       "step1Body": "Analisis de sangre, radiografia, ecografia, receta, medicamento o cualquier papel de salud.",
       "step2Title": "La IA lo analiza en segundos",
@@ -120,7 +120,7 @@
         "notSharp": "Poca nitidez",
         "unreadable": "No se puede leer"
       },
-      "qualityTooltip": "MediScan revisa nitidez, luz y contraste antes del analisis.",
+      "qualityTooltip": "MedicScan revisa nitidez, luz y contraste antes del analisis.",
       "analyzable": "Analizable",
       "analyzableWithCaution": "Analizable con cuidado",
       "notAnalyzable": "No analizable",
@@ -151,7 +151,7 @@
       "meaningRegion": "Explicacion del estudio",
       "questionsTitle": "Preguntas para hacerle al medico",
       "disclaimerTitle": "Aviso importante",
-      "disclaimerBody": "MediScan no sustituye al médico ni al farmacéutico. No valida recetas. Solo ayuda a leer, traducir y organizar la información para que el usuario consulte con un profesional.",
+      "disclaimerBody": "MedicScan no sustituye al médico ni al farmacéutico. No valida recetas. Solo ayuda a leer, traducir y organizar la información para que el usuario consulte con un profesional.",
       "fallbacks": {
         "unknownValueName": "Valor sin identificar",
         "valueNotReported": "No informado",
@@ -163,7 +163,7 @@
           "Doctor/a, que significa este resultado en mi caso particular?",
           "Necesito repetir o complementar este estudio antes de decidir proximos pasos?"
         ],
-        "disclaimer": "MediScan no sustituye al médico ni al farmacéutico. No valida recetas. Solo ayuda a leer, traducir y organizar la información para que el usuario consulte con un profesional."
+        "disclaimer": "MedicScan no sustituye al médico ni al farmacéutico. No valida recetas. Solo ayuda a leer, traducir y organizar la información para que el usuario consulte con un profesional."
       }
     },
     "loading": {
@@ -225,7 +225,7 @@
   },
   "en": {
     "meta": {
-      "title": "MediScan | Understand your medical studies",
+      "title": "MedicScan | Understand your medical studies",
       "description": "PWA to photograph medical studies and get a clear, educational explanation before your appointment."
     },
     "language": {
@@ -268,11 +268,11 @@
       "openSettings": "Go to Settings"
     },
     "pwa": {
-      "installTitle": "Install MediScan",
+      "installTitle": "Install MedicScan",
       "installBody": "Quick access from the home screen with an app-like experience.",
       "installAction": "Install app",
       "updateTitle": "Update available",
-      "updateBody": "A new version of MediScan is ready.",
+      "updateBody": "A new version of MedicScan is ready.",
       "updateAction": "Update now",
       "dismiss": "Dismiss"
     },
@@ -286,12 +286,12 @@
       "serverResponseFailed": "The server responded in an unexpected way. Try again in a few minutes.",
       "timeoutFailed": "The analysis took longer than expected. Try again or upload a lighter, sharper photo.",
       "serverBusy": "The analysis service is busy right now. Wait a few minutes and try again.",
-      "networkFailed": "We could not connect to MediScan. Check your connection and try again.",
+      "networkFailed": "We could not connect to MedicScan. Check your connection and try again.",
       "retryAnalyze": "Try again",
       "dismissError": "Dismiss alert"
     },
     "howItWorks": {
-      "title": "How MediScan works",
+      "title": "How MedicScan works",
       "step1Title": "Photograph your prescription, medication, or study",
       "step1Body": "Blood test, X-ray, ultrasound, prescription, medication, or any health paper.",
       "step2Title": "AI analyzes it in seconds",
@@ -344,7 +344,7 @@
         "notSharp": "Low sharpness",
         "unreadable": "Unreadable"
       },
-      "qualityTooltip": "MediScan checks sharpness, light, and contrast before analysis.",
+      "qualityTooltip": "MedicScan checks sharpness, light, and contrast before analysis.",
       "analyzable": "Analyzable",
       "analyzableWithCaution": "Analyzable with caution",
       "notAnalyzable": "Not analyzable",
@@ -375,7 +375,7 @@
       "meaningRegion": "Study explanation",
       "questionsTitle": "Questions to ask your doctor",
       "disclaimerTitle": "Important notice",
-      "disclaimerBody": "MediScan does not replace a doctor or pharmacist. It does not validate prescriptions. It only helps read, translate, and organize information so the user can consult a professional.",
+      "disclaimerBody": "MedicScan does not replace a doctor or pharmacist. It does not validate prescriptions. It only helps read, translate, and organize information so the user can consult a professional.",
       "fallbacks": {
         "unknownValueName": "Unidentified value",
         "valueNotReported": "Not reported",
@@ -387,7 +387,7 @@
           "Doctor, what does this result mean in my specific case?",
           "Do I need to repeat or complement this study before deciding next steps?"
         ],
-        "disclaimer": "MediScan does not replace a doctor or pharmacist. It does not validate prescriptions. It only helps read, translate, and organize information so the user can consult a professional."
+        "disclaimer": "MedicScan does not replace a doctor or pharmacist. It does not validate prescriptions. It only helps read, translate, and organize information so the user can consult a professional."
       }
     },
     "loading": {
@@ -449,7 +449,7 @@
   },
   "pt": {
     "meta": {
-      "title": "MediScan | Entenda seus exames medicos",
+      "title": "MedicScan | Entenda seus exames medicos",
       "description": "PWA para fotografar exames medicos e receber uma explicacao clara e educativa antes da consulta."
     },
     "language": {
@@ -492,11 +492,11 @@
       "openSettings": "Ir para Configuracao"
     },
     "pwa": {
-      "installTitle": "Instale o MediScan",
+      "installTitle": "Instale o MedicScan",
       "installBody": "Acesso rapido pela tela inicial com experiencia de app.",
       "installAction": "Instalar app",
       "updateTitle": "Atualizacao disponivel",
-      "updateBody": "Ha uma nova versao do MediScan pronta para usar.",
+      "updateBody": "Ha uma nova versao do MedicScan pronta para usar.",
       "updateAction": "Atualizar agora",
       "dismiss": "Fechar"
     },
@@ -510,12 +510,12 @@
       "serverResponseFailed": "O servidor respondeu de forma inesperada. Tente novamente em alguns minutos.",
       "timeoutFailed": "A analise demorou mais do que o esperado. Tente de novo ou envie uma foto mais leve e nitida.",
       "serverBusy": "O servico de analise esta ocupado agora. Aguarde alguns minutos e tente novamente.",
-      "networkFailed": "Nao foi possivel conectar ao MediScan. Verifique sua conexao e tente novamente.",
+      "networkFailed": "Nao foi possivel conectar ao MedicScan. Verifique sua conexao e tente novamente.",
       "retryAnalyze": "Tentar de novo",
       "dismissError": "Fechar aviso"
     },
     "howItWorks": {
-      "title": "Como o MediScan funciona",
+      "title": "Como o MedicScan funciona",
       "step1Title": "Fotografe sua receita, medicamento ou exame",
       "step1Body": "Exame de sangue, radiografia, ultrassom, receita, medicamento ou qualquer papel de saude.",
       "step2Title": "A IA analisa em segundos",
@@ -568,7 +568,7 @@
         "notSharp": "Pouca nitidez",
         "unreadable": "Nao da para ler"
       },
-      "qualityTooltip": "O MediScan verifica nitidez, luz e contraste antes da analise.",
+      "qualityTooltip": "O MedicScan verifica nitidez, luz e contraste antes da analise.",
       "analyzable": "Analisavel",
       "analyzableWithCaution": "Analisavel com cuidado",
       "notAnalyzable": "Nao analisavel",
@@ -599,7 +599,7 @@
       "meaningRegion": "Explicacao do exame",
       "questionsTitle": "Perguntas para fazer ao medico",
       "disclaimerTitle": "Aviso importante",
-      "disclaimerBody": "O MediScan não substitui o médico nem o farmacêutico. Não valida receitas. Apenas ajuda a ler, traduzir e organizar as informações para que o usuário consulte um profissional.",
+      "disclaimerBody": "O MedicScan não substitui o médico nem o farmacêutico. Não valida receitas. Apenas ajuda a ler, traduzir e organizar as informações para que o usuário consulte um profissional.",
       "fallbacks": {
         "unknownValueName": "Valor nao identificado",
         "valueNotReported": "Nao informado",
@@ -611,7 +611,7 @@
           "Doutor/a, o que esse resultado significa no meu caso especifico?",
           "Preciso repetir ou complementar este exame antes de decidir os proximos passos?"
         ],
-        "disclaimer": "O MediScan não substitui o médico nem o farmacêutico. Não valida receitas. Apenas ajuda a ler, traduzir e organizar as informações para que o usuário consulte um profissional."
+        "disclaimer": "O MedicScan não substitui o médico nem o farmacêutico. Não valida receitas. Apenas ajuda a ler, traduzir e organizar as informações para que o usuário consulte um profissional."
       }
     },
     "loading": {

@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/components/LanguageProvider";
-import { MediScanLogoMark } from "@/components/MediScanLogoMark";
+import { MedicScanLogoMark } from "@/components/MedicScanLogoMark";
 
 export default function LoginPage() {
   const { t } = useLanguage();
@@ -23,9 +23,9 @@ export default function LoginPage() {
 
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center justify-center gap-x-1.5 rounded-xl px-1 py-1">
-            <MediScanLogoMark className="h-12 w-12 shrink-0 translate-y-px text-medical" />
+            <MedicScanLogoMark className="h-12 w-12 shrink-0 translate-y-px text-medical" />
             <span className="text-[clamp(2rem,8vw,2.6rem)] font-bold leading-none tracking-normal">
-              <span className="text-white">Medi</span>
+              <span className="text-white">Medic</span>
               <span className="text-medical">Scan</span>
             </span>
           </div>

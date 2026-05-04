@@ -78,10 +78,10 @@ export default function HomePage() {
     }
 
     try {
-      const storedPreview = window.sessionStorage.getItem("mediscan-last-preview");
-      const storedFileName = window.sessionStorage.getItem("mediscan-last-filename");
-      const storedLoadedAt = window.sessionStorage.getItem("mediscan-last-fileLoadedAtMs");
-      const storedResult = window.sessionStorage.getItem("mediscan-last-result");
+      const storedPreview = window.sessionStorage.getItem("medicscan-last-preview");
+      const storedFileName = window.sessionStorage.getItem("medicscan-last-filename");
+      const storedLoadedAt = window.sessionStorage.getItem("medicscan-last-fileLoadedAtMs");
+      const storedResult = window.sessionStorage.getItem("medicscan-last-result");
 
       if (storedPreview) {
         setPreviewUrl(storedPreview);
@@ -113,17 +113,17 @@ export default function HomePage() {
     }
 
     if (previewUrl) {
-      window.sessionStorage.setItem("mediscan-last-preview", previewUrl);
+      window.sessionStorage.setItem("medicscan-last-preview", previewUrl);
       if (fileName) {
-        window.sessionStorage.setItem("mediscan-last-filename", fileName);
+        window.sessionStorage.setItem("medicscan-last-filename", fileName);
       }
       if (fileLoadedAtMs) {
-        window.sessionStorage.setItem("mediscan-last-fileLoadedAtMs", String(fileLoadedAtMs));
+        window.sessionStorage.setItem("medicscan-last-fileLoadedAtMs", String(fileLoadedAtMs));
       }
     } else {
-      window.sessionStorage.removeItem("mediscan-last-preview");
-      window.sessionStorage.removeItem("mediscan-last-filename");
-      window.sessionStorage.removeItem("mediscan-last-fileLoadedAtMs");
+      window.sessionStorage.removeItem("medicscan-last-preview");
+      window.sessionStorage.removeItem("medicscan-last-filename");
+      window.sessionStorage.removeItem("medicscan-last-fileLoadedAtMs");
     }
   }, [fileLoadedAtMs, fileName, previewUrl]);
 
@@ -134,9 +134,9 @@ export default function HomePage() {
 
     try {
       if (result) {
-        window.sessionStorage.setItem("mediscan-last-result", JSON.stringify({ locale, result }));
+        window.sessionStorage.setItem("medicscan-last-result", JSON.stringify({ locale, result }));
       } else {
-        window.sessionStorage.removeItem("mediscan-last-result");
+        window.sessionStorage.removeItem("medicscan-last-result");
       }
     } catch {
       // ignore storage failures
@@ -169,8 +169,8 @@ export default function HomePage() {
     setResult(null);
     setError(null);
     try {
-      window.sessionStorage.removeItem("mediscan-last-especialidad");
-      window.sessionStorage.removeItem("mediscan-last-result");
+      window.sessionStorage.removeItem("medicscan-last-especialidad");
+      window.sessionStorage.removeItem("medicscan-last-result");
     } catch {
       // ignore storage failures
     }
@@ -215,7 +215,7 @@ export default function HomePage() {
       }
 
       try {
-        window.sessionStorage.setItem("mediscan-last-especialidad", data.result.especialidad);
+        window.sessionStorage.setItem("medicscan-last-especialidad", data.result.especialidad);
       } catch {
         // ignore storage failures (private mode / disabled storage)
       }

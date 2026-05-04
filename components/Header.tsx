@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { AccessibilityControls } from "@/components/AccessibilityControls";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { MediScanLogoMark } from "@/components/MediScanLogoMark";
+import { MedicScanLogoMark } from "@/components/MedicScanLogoMark";
 import { PlanBadge } from "@/components/PlanBadge";
 import { useLanguage } from "@/components/LanguageProvider";
 
@@ -98,9 +98,9 @@ export function Header() {
 
         <div className="min-w-0 flex-1 text-center">
           <Link href="/" className="inline-flex items-center justify-center gap-x-1 rounded-xl px-1 py-1 outline-none focus:ring-2 focus:ring-medical/60">
-            <MediScanLogoMark className="h-10 w-10 shrink-0 translate-y-px text-medical min-[380px]:h-11 min-[380px]:w-11" />
+            <MedicScanLogoMark className="h-10 w-10 shrink-0 translate-y-px text-medical min-[380px]:h-11 min-[380px]:w-11" />
             <span className="text-[clamp(1.6rem,5vw+0.5rem,2.35rem)] font-bold leading-none tracking-normal">
-              <span className="text-[var(--app-text-strong)]">Medi</span>
+              <span className="text-[var(--app-text-strong)]">Medic</span>
               <span className="text-medical">Scan</span>
             </span>
           </Link>

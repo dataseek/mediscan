@@ -1,6 +1,6 @@
 {
-  "name": "MediScan",
-  "short_name": "MediScan",
+  "name": "MedicScan",
+  "short_name": "MedicScan",
   "description": "Entende tus estudios y recetas medicas antes de la consulta.",
   "start_url": "/",
   "scope": "/",
@@ -10,7 +10,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/mediscan-heart.svg",
+      "src": "/icons/medicscan-heart.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

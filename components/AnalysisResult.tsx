@@ -4,12 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAccessibility } from "@/components/AccessibilityProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { MediScanLogoMark } from "@/components/MediScanLogoMark";
+import { MedicScanLogoMark } from "@/components/MedicScanLogoMark";
 import { PrescriptionSupport } from "@/components/PrescriptionSupport";
 import type { AnalysisResponse, MedicalValue } from "@/lib/types";
 import { splitExplanationIntoParagraphs } from "@/lib/utils";
 
-const FAMILY_PHONE_STORAGE_KEY = "mediscan-family-phone";
+const FAMILY_PHONE_STORAGE_KEY = "medicscan-family-phone";
 
 function preferredSpeechLang(locale: string) {
   if (locale === "pt") return "pt-BR";
@@ -300,7 +300,7 @@ export function AnalysisResult({ result, previewUrl }: { result: AnalysisRespons
 
   const shareText = useMemo(() => {
     const lines: string[] = [];
-    lines.push("MediScan — resumen para revisar con un profesional.");
+    lines.push("MedicScan — resumen para revisar con un profesional.");
     if (result.tipo_estudio) lines.push(`Documento: ${result.tipo_estudio}`);
     if (result.resumen) lines.push(`Resumen: ${result.resumen}`);
     const values = result.valores?.slice(0, 6) ?? [];
